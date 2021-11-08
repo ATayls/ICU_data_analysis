@@ -26,12 +26,12 @@ split_points = {
 
 stable_24hr_slope_min_max = {
     "TEMPERATURE": (-0.5, 0.5),
-    "SYSTOLIC_BP": (-10, 10),
-    "HEART_RATE": (-10, 10),
-    "RESP_RATE": (-2, 2),
-    "O2_SATS": (-2, 2),
+    "SYSTOLIC_BP": (-10.0, 10.0),
+    "HEART_RATE": (-10.0, 10.0),
+    "RESP_RATE": (-2.0, 2.0),
+    "O2_SATS": (-2.0, 2.0),
     "INSPIRED_O2_LITRES": (-0.5, 0.5),
-    "INSPIRED_O2_%": (-3, 3)
+    "INSPIRED_O2_%": (-3.0, 3.0)
 }
 
 slope_categories = {

@@ -11,6 +11,8 @@ import numpy as np
 from tsfresh.utilities.dataframe_functions import roll_time_series
 from tsfresh import extract_features
 
+import settings
+
 
 def split_non_symetric(icu_df: pd.DataFrame, split_points: Dict[str, tuple[int, int]]) -> pd.DataFrame:
     """
@@ -205,3 +207,77 @@ def create_ts_slope_features(
     icu_df_ts[new_feature_cols] = icu_df_ts[new_feature_cols].fillna(value=0.0)
 
     return icu_df_ts
+
+
+def categorise_slopes(icu_df: pd.DataFrame,
+                      stable_thresholds: Dict[str, tuple[float, float]],
+):
+    """
+    Categorise the SLOPE_TIMEWISE Variables.
+    """
+    icu_df = icu_df.copy()
+    print(f"--Categorising slopes: {list(stable_thresholds.keys())}")
+    for var, thresholds in stable_thresholds.items():
+        icu_df[f"{var}_SLOPE_CAT"] = icu_df.apply(
+            lambda row: categorise_obs_slope(row, var, thresholds), axis=1
+        )
+    return icu_df
+
+
+def categorise_obs_slope(row: pd.Series, var_name: str, thresholds: tuple[float, float]):
+    """
+    Slope categorisation to apply to pandas dataframe row-wise.
+    """
+    stable_min, stable_max = thresholds
+    stable_min /= 24
+    stable_max /= 24
+    if var_name == "O2_SATS":
+        if row[var_name + "_SLOPE_TIMEWISE"] < stable_min:
+            # Worsening
+            return 4
+        elif row[var_name + "_SLOPE_TIMEWISE"] > stable_max:
+            # Improving
+            return 2
+        else:
+            # Stable
+            return 3
+    elif (var_name == "INSPIRED_O2_LITRES") or (var_name == "INSPIRED_O2_%"):
+        if row[var_name+"_SLOPE_TIMEWISE"] < stable_min:
+            # Improving
+            return 2
+        elif row[var_name+"_SLOPE_TIMEWISE"] > stable_max:
+            # Worsening
+            return 4
+        else:
+            # Stable
+            return 3
+    elif row[var_name+"_POS"] > 0:
+        if row[var_name+"_SLOPE_TIMEWISE"] < stable_min:
+            # High risk improving
+            return 2
+        elif row[var_name+"_SLOPE_TIMEWISE"] > stable_max:
+            # high risk worsening
+            return 4
+        else:
+            # high risk stable
+            return 3
+    elif row[var_name+"_NEG"] > 0:
+        if row[var_name + "_SLOPE_TIMEWISE"] < stable_min:
+            # high risk and Worsening
+            return 4
+        elif row[var_name + "_SLOPE_TIMEWISE"] > stable_max:
+            # high risk and Improving
+            return 2
+        else:
+            # high risk stable
+            return 3
+    else:
+        if row[var_name + "_SLOPE_TIMEWISE"] < stable_min:
+            # Low risk unstable
+            return 1
+        elif row[var_name + "_SLOPE_TIMEWISE"] > stable_max:
+            # low risk unstable
+            return 1
+        else:
+            # Stable
+            return 0

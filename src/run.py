@@ -1,6 +1,6 @@
 from utils import load_data
 from preprocessing import preprocess
-from feature_engineering import create_ts_base_features, create_time_delta, create_ts_slope_features, split_non_symetric
+from feature_engineering import create_ts_base_features, create_time_delta, create_ts_slope_features, split_non_symetric, categorise_slopes
 import settings
 
 if __name__ == '__main__':
@@ -10,4 +10,6 @@ if __name__ == '__main__':
     df = create_time_delta(df)
     df = create_ts_base_features(df, settings.standard_variables, periods=5)
     df = create_ts_slope_features(df, settings.standard_variables, periods=5)
+    df = categorise_slopes(df, settings.stable_24hr_slope_min_max)
+
     print("")
