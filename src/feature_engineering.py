@@ -281,3 +281,15 @@ def categorise_obs_slope(row: pd.Series, var_name: str, thresholds: tuple[float,
         else:
             # Stable
             return 0
+
+
+def create_features(icu_df: pd.DataFrame, periods: int, verbose: bool = True) -> pd.DataFrame:
+    """ Preprocessing pipeline for ICU datasets"""
+    print("Running feature engineering pipeline")
+    return (
+        icu_df.pipe(split_non_symetric, settings.split_points)
+              .pipe(create_time_delta)
+              .pipe(create_ts_base_features, settings.standard_variables, periods=periods)
+              .pipe(create_ts_slope_features, settings.standard_variables, periods=periods)
+              .pipe(categorise_slopes, settings.stable_24hr_slope_min_max)
+    )
