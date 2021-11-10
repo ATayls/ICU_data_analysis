@@ -6,6 +6,9 @@ ROOT_DIR = Path(__file__).resolve().parent
 RAW_DATA_DIR = ROOT_DIR.joinpath(r'raw_data/raw/')
 RAW_DATA_DIR_PKL = ROOT_DIR.joinpath(r'raw_data/pickled/')
 
+# Processed data folders
+PROC_DATA_DIR = ROOT_DIR.joinpath(r'processed_data')
+
 standard_variables = [
     "TEMPERATURE",
     "SYSTOLIC_BP",
