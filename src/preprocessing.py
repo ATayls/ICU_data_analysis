@@ -70,5 +70,5 @@ def preprocess(icu_df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
         icu_df.pipe(handle_missing, verbose)
               .pipe(parse_inspired_o2, verbose)
               .pipe(encode_alert, verbose)
-              .pipe(encode_age_range, verbose)
+              #.pipe(encode_age_range, verbose)
     )
