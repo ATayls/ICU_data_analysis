@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
-from evaluation import get_metrics_and_curves, crossvalidated_curve_stats
+from evaluation import get_metrics_and_curves, crossvalidated_curve_stats, confidence_intervals
 
 
 def run_lr_train(X_train, X_test, y_train, y_test, verbose=True):
@@ -102,3 +102,67 @@ def train_logistic_model_cv(
     }
 
     return cv_results
+
+
+def train_logistic_model_bootstrapped(
+        icu_df: pd.DataFrame, independent_vars: List[str], dependant_var: str, n_bootstraps: int,
+        tpr_match: Optional[float] = None, fpr_match: Optional[float] = None,
+        verbose: bool = False, test_icu_df=pd.DataFrame()
+):
+    """
+    Train logistic regression model with given independent variables to classify dependant var.
+    Bootstrap and test on OUT OF BAG samples if test_icu_df is not provided.
+    Test on test_icu_df if provided.
+    """
+    metric_list = []
+    cv_results = {}
+    completed_bootstraps = 0
+    pbar = tqdm(total=n_bootstraps, desc="DEWS2 BOOTSTRAP", leave=True)
+    while completed_bootstraps < n_bootstraps:
+
+        #print(completed_bootstraps, "bootstraps")
+
+        # bootstrap by sampling with replacement
+        sample_class0 = patient_sample(icu_df[icu_df[dependant_var] == 0])
+        sample_class1 = patient_sample(icu_df[icu_df[dependant_var] == 1])
+        sample = pd.concat([sample_class0, sample_class1])
+
+        if test_icu_df.empty :
+            oob = icu_df.iloc[list(set(icu_df.index) - set(sample.index))]
+        else:
+            sample_class0 = patient_sample(test_icu_df[test_icu_df[dependant_var] == 0])
+            sample_class1 = patient_sample(test_icu_df[test_icu_df[dependant_var] == 1])
+            oob = pd.concat([sample_class0, sample_class1])
+
+        logisticReg, test_pred = run_lr_train(sample[independent_vars], oob[independent_vars], sample[dependant_var], oob[dependant_var], verbose=verbose)
+
+        fold_metrics, fold_curves = get_metrics_and_curves(**test_pred,tpr_match=tpr_match, fpr_match=fpr_match)
+        cv_results[completed_bootstraps] = {
+            "model": logisticReg,
+            "test_pred": test_pred,
+            "metrics": fold_metrics,
+            "curves": fold_curves,
+        }
+        metric_list.append(fold_metrics)
+        mean_auc, lower, upper = confidence_intervals([x['AUC ROC'] for x in metric_list])
+
+        completed_bootstraps += 1
+        pbar.update(1)
+        pbar.set_description(f"DEWS2 BOOTSTRAP {mean_auc} (CI {lower} - {upper})", refresh=True)
+    pbar.close()
+
+    cv_results["CV_AVG"] = {
+        "metrics": pd.DataFrame(metric_list).mean().to_dict(),
+        "CI_95_upper": pd.DataFrame(metric_list).apply(lambda x: np.sort(np.array(x))[int(0.975*len(x))]).to_dict(),
+        "CI_95_lower": pd.DataFrame(metric_list).apply(lambda x: np.sort(np.array(x))[int(0.025*len(x))]).to_dict(),
+        "curves": crossvalidated_curve_stats(cv_results)
+    }
+
+    return cv_results
+
+
+def patient_sample(icu_df, replace=True, frac=1):
+    """ Take a sample of patient observations."""
+    unique_ids = icu_df["ADMISSION_ID"].unique()
+    sampled_ids = np.random.choice(unique_ids, size=frac*len(unique_ids), replace=replace)
+    return icu_df[icu_df["ADMISSION_ID"].isin(sampled_ids)].copy(deep=True)
