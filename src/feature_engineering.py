@@ -293,3 +293,23 @@ def create_features(icu_df: pd.DataFrame, periods: int, verbose: bool = True) ->
               .pipe(create_ts_slope_features, settings.standard_variables, periods=periods)
               .pipe(categorise_slopes, settings.stable_24hr_slope_min_max)
     )
+
+
+def get_all_feature_names():
+    """ Return list of engineered features"""
+    # split features
+    pos_split_features = [x + "_POS" for x in settings.split_points.keys()]
+    neg_split_features = [x + "_NEG" for x in settings.split_points.keys()]
+    split_features = pos_split_features + neg_split_features
+    # standard features (unsplit)
+    standard_features = list(set(settings.standard_variables) - set(settings.split_points.keys()))
+    # timeseries features
+    ts_features = [
+        f'{var}_{f}' for var in settings.standard_variables
+        for f in ['DIFF', 'ROLAVG', 'ROLSTD', 'ALLAVG', 'ALLSTD']
+    ]
+    # slope features
+    slope_features = [f"{var}_SLOPE" for var in settings.standard_variables]
+    slope_timewise_features = [f"{var}_SLOPE_TIMEWISE" for var in settings.standard_variables]
+    slope_cat_features = [f"{var}_SLOPE_CAT" for var in settings.stable_24hr_slope_min_max.keys()]
+    return split_features + standard_features + ts_features + slope_timewise_features + slope_cat_features
