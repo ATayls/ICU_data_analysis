@@ -96,6 +96,46 @@ def confidence_intervals(scores: np.array, interval: float = 0.95, decimals: int
     return mean_score_r, confidence_lower_r, confidence_upper_r
 
 
+def crossvalidated_curve_stats(cv_results):
+    """
+    Calculate the average and std of multiple Precision-recall and ROC curves.
+    https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc_crossval.html
+    :param cv_results: list of crossvalidation results.
+    :return:
+    """
+    uniform_xaxis_values = np.linspace(0, 1, 100)
+    tprs, precisions = [], []
+    for fold_i, fold_outputs in cv_results.items():
+        # Intepolate curve y values along uniform linspace
+        interp_tpr = np.interp(
+            uniform_xaxis_values,
+            fold_outputs["curves"]["ROC"]["FPR"],
+            fold_outputs["curves"]["ROC"]["TPR"]
+        )
+        interp_precision = np.interp(
+            uniform_xaxis_values,
+            fold_outputs["curves"]["PR"]["R"][::-1],
+            fold_outputs["curves"]["PR"]["P"][::-1]
+        )
+        interp_tpr[-1] = 1.0
+        interp_precision[-1] = 0.0
+
+        tprs.append(interp_tpr)
+        precisions.append(interp_precision)
+
+    mean_tpr = np.mean(tprs, axis=0)
+    std_tpr = np.std(tprs, axis=0)
+    mean_precisions = np.mean(precisions, axis=0)
+    std_precisions = np.std(precisions, axis=0)
+
+    average_curve_dict = {
+        "PR": {"P": mean_precisions, "R": uniform_xaxis_values, "P STD": std_precisions},
+        "ROC": {"TPR": mean_tpr, "FPR": uniform_xaxis_values, "TPR STD": std_tpr}
+    }
+
+    return average_curve_dict
+
+
 def matched_thresh_y_pred(y_probs: np.array, tpr: np.array, roc_thresh: np.array, tpr_match: float):
     """ Recalculate y_pred at a threshold that matches input tpr"""
     for i, tpr_val in enumerate(tpr):
