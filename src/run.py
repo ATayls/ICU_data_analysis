@@ -1,8 +1,9 @@
 from utils import load_data
 from preprocessing import preprocess
-from feature_engineering import create_features
+from feature_engineering import create_features, get_all_feature_names
 from settings import PROC_DATA_DIR
 from news2_functions import bootstrap_news2
+from train import train_logistic_model_cv
 
 import pandas as pd
 
@@ -35,10 +36,13 @@ if not processed_fp.exists():
 else:
     df = pd.read_pickle(processed_fp)
 
+feature_list = get_all_feature_names()
+
 ##########################################################
 ## Modelling
 ##########################################################
 
 news2_bootstrapped_auc = bootstrap_news2(df, N_BOOTSTRAPS, DEPENDANT_VAR)
+dews2_cv_results = train_logistic_model_cv(df, feature_list, DEPENDANT_VAR, folds=10, fpr_match=1-0.936)
 
 print("")
