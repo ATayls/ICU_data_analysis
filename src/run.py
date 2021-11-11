@@ -2,6 +2,7 @@ from utils import load_data
 from preprocessing import preprocess
 from feature_engineering import create_features
 from settings import PROC_DATA_DIR
+from news2_functions import bootstrap_news2
 
 import pandas as pd
 
@@ -13,6 +14,8 @@ import pandas as pd
 DATA_VERSION = "1"
 FILENAME = 'Annotated_dataset_training_anonymised_V2.xlsx'
 TS_N_OBS = 5
+DEPENDANT_VAR = "24_HOURS_FROM_EVENT"
+N_BOOTSTRAPS = 150
 
 ################################################################################
 ## Extract and Transform
@@ -35,5 +38,7 @@ else:
 ##########################################################
 ## Modelling
 ##########################################################
+
+news2_bootstrapped_auc = bootstrap_news2(df, N_BOOTSTRAPS, DEPENDANT_VAR)
 
 print("")
