@@ -63,6 +63,23 @@ def handle_missing(icu_df: pd.DataFrame, verbose: bool = False) -> pd.DataFrame:
     return icu_df
 
 
+def handle_temperature(icu_df: pd.DataFrame, verbose: bool = False) -> pd.DataFrame:
+    """
+    Handle cases where na placeholders are within TEMPERATURE variable.
+    Currently drops these observations and ensures TEMPERATURE is floating point.
+    """
+    temperature_na_placeholders = [
+        "Refused", "Unable", "Refused Not Concerned", "Refused Concerned"
+    ]
+    mask = icu_df["TEMPERATURE"].isin(temperature_na_placeholders)
+    if mask.any():
+        icu_df = icu_df[~mask]
+        if verbose:
+            print(f"--Dropped {mask.sum()} TEMPERATURE NA placeholder rows")
+    icu_df["TEMPERATURE"] = icu_df["TEMPERATURE"].astype(float)
+    return icu_df
+
+
 def preprocess(icu_df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
     """ Preprocessing pipeline for ICU datasets"""
     print("Running preprocessing pipeline")
@@ -70,5 +87,6 @@ def preprocess(icu_df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
         icu_df.pipe(handle_missing, verbose)
               .pipe(parse_inspired_o2, verbose)
               .pipe(encode_alert, verbose)
+              .pipe(handle_temperature, verbose)
               #.pipe(encode_age_range, verbose)
     )
