@@ -65,8 +65,13 @@ def bootstrap_news2(
         metric_list.append(metrics)
         completed_bootstraps += 1
         pbar.update(1)
-        mean_auc, lower, upper = confidence_intervals([x['AUC ROC'] for x in metric_list])
-        pbar.set_description(f"NEWS2 BOOTSTRAP {mean_auc} (CI {lower} - {upper})", refresh=True)
+        mean_roc, lower_roc, upper_roc = confidence_intervals([x['AUC ROC'] for x in metric_list])
+        mean_pr, lower_pr, upper_pr = confidence_intervals([x['AUC PR'] for x in metric_list])
+        pbar.set_description(
+            f"NEWS2 BOOTSTRAP | AUROC {mean_roc} (CI {lower_roc} - {upper_roc})" +\
+            f" | AUPRC {mean_pr} (CI {lower_pr} - {upper_pr})",
+            refresh=True
+        )
     pbar.close()
 
     return metric_list
