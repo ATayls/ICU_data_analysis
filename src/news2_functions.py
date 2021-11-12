@@ -5,9 +5,10 @@ from typing import Optional
 from sklearn.preprocessing import MinMaxScaler
 from pandas import DataFrame
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 
-from evaluation import get_metrics_and_curves, confidence_intervals
+from evaluation import get_metrics_and_curves, crossvalidated_curve_stats, confidence_intervals
 
 
 def predictions_news2(
@@ -50,6 +51,7 @@ def bootstrap_news2(
     :return:
     """
     metric_list = []
+    cv_results = {}
     completed_bootstraps = 0
     pbar = tqdm(total=n_bootstraps, desc="NEWS2 BOOTSTRAP", leave=True)
     while completed_bootstraps < n_bootstraps:
@@ -59,10 +61,16 @@ def bootstrap_news2(
         y_test, y_pred, y_probs = predictions_news2(
             sample, threshold=threshold, dependant_var=dependant_var
         )
-        metrics, _ = get_metrics_and_curves(
+        metrics, curves = get_metrics_and_curves(
             y_test, y_pred, y_probs
         )
         metric_list.append(metrics)
+
+        cv_results[completed_bootstraps] = {
+            "metrics": metrics,
+            "curves": curves,
+        }
+
         completed_bootstraps += 1
         pbar.update(1)
         mean_roc, lower_roc, upper_roc = confidence_intervals([x['AUC ROC'] for x in metric_list])
@@ -74,4 +82,11 @@ def bootstrap_news2(
         )
     pbar.close()
 
-    return metric_list
+    cv_results["CV_AVG"] = {
+        "metrics": pd.DataFrame(metric_list).mean().to_dict(),
+        "CI_95_upper": pd.DataFrame(metric_list).apply(lambda x: np.sort(np.array(x))[int(0.975*len(x))]).to_dict(),
+        "CI_95_lower": pd.DataFrame(metric_list).apply(lambda x: np.sort(np.array(x))[int(0.025*len(x))]).to_dict(),
+        "curves": crossvalidated_curve_stats(cv_results)
+    }
+
+    return cv_results
