@@ -89,11 +89,14 @@ def train_logistic_model_cv(
         metric_list.append(fold_metrics)
 
         # Update progress bar
-        current_mean = np.around(np.mean([x['AUC ROC'] for x in metric_list]),4)
-        current_std = np.around(np.std([x['AUC ROC'] for x in metric_list]),4)
         pbar.update(1)
+        mean_roc = np.around(np.mean([x['AUC ROC'] for x in metric_list]), 4)
+        std_roc = np.around(np.std([x['AUC ROC'] for x in metric_list]), 4)
+        mean_pr = np.around(np.mean([x['AUC PR'] for x in metric_list]), 4)
+        std_pr = np.around(np.std([x['AUC PR'] for x in metric_list]), 4)
         pbar.set_description(
-            f"DEWS2 {folds}FOLD CV {current_mean} (+/- {current_std})",
+            f"DEWS2 {folds}FOLDCV | AUROC {mean_roc} (+/- {std_roc})" + \
+            f" | AUPRC {mean_pr} (+/- {std_pr})",
             refresh=True
         )
     pbar.close()
@@ -146,11 +149,17 @@ def train_logistic_model_bootstrapped(
             "curves": fold_curves,
         }
         metric_list.append(fold_metrics)
-        mean_auc, lower, upper = confidence_intervals([x['AUC ROC'] for x in metric_list])
-
         completed_bootstraps += 1
+
+        # Update progress bar
         pbar.update(1)
-        pbar.set_description(f"DEWS2 BOOTSTRAP {mean_auc} (CI {lower} - {upper})", refresh=True)
+        mean_roc, lower_roc, upper_roc = confidence_intervals([x['AUC ROC'] for x in metric_list])
+        mean_pr, lower_pr, upper_pr = confidence_intervals([x['AUC PR'] for x in metric_list])
+        pbar.set_description(
+            f"DEWS2 BOOTSTRAP | AUROC {mean_roc} (CI {lower_roc} - {upper_roc})" +\
+            f" | AUPRC {mean_pr} (CI {lower_pr} - {upper_pr})",
+            refresh=True
+        )
     pbar.close()
 
     cv_results["CV_AVG"] = {
@@ -207,11 +216,14 @@ def train_logistic_model_CV_grouped(
         metric_list.append(fold_metrics)
 
         # Update progress bar
-        current_mean = np.around(np.mean([x['AUC ROC'] for x in metric_list]),4)
-        current_std = np.around(np.std([x['AUC ROC'] for x in metric_list]),4)
         pbar.update(1)
+        mean_roc = np.around(np.mean([x['AUC ROC'] for x in metric_list]), 4)
+        std_roc = np.around(np.std([x['AUC ROC'] for x in metric_list]), 4)
+        mean_pr = np.around(np.mean([x['AUC PR'] for x in metric_list]), 4)
+        std_pr = np.around(np.std([x['AUC PR'] for x in metric_list]), 4)
         pbar.set_description(
-            f"DEWS2 {folds}FOLD CV {current_mean} (+/- {current_std})",
+            f"DEWS2 {folds}FOLDCV | AUROC {mean_roc} (+/- {std_roc})" + \
+            f" | AUPRC {mean_pr} (+/- {std_pr})",
             refresh=True
         )
     pbar.close()
