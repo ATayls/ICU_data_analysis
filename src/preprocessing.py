@@ -2,10 +2,12 @@
 File to contain all preprocessing functions for ICU data.
 Entry Point: preprocess()
 """
+from copy import copy
 
 import pandas as pd
 import numpy as np
 
+import settings
 
 def parse_inspired_o2(icu_df: pd.DataFrame, verbose: bool = False) -> pd.DataFrame:
     """ Parse inspired o2 features """
@@ -80,11 +82,23 @@ def handle_temperature(icu_df: pd.DataFrame, verbose: bool = False) -> pd.DataFr
     return icu_df
 
 
+def standardise_columns(icu_df: pd.DataFrame, verbose: bool = False) -> pd.DataFrame:
+    """ Any Column renaming to standardise goes here."""
+    columns = {}
+    for orig, new in settings.column_name_mapping.items():
+        if orig in icu_df.columns:
+            columns[orig] = new
+            if verbose:
+                print(f"--Renaming {orig} to {new}")
+    return icu_df.rename(columns=columns)
+
+
 def preprocess(icu_df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
     """ Preprocessing pipeline for ICU datasets"""
     print("Running preprocessing pipeline")
     return (
-        icu_df.pipe(handle_missing, verbose)
+        icu_df.pipe(standardise_columns, verbose)
+              .pipe(handle_missing, verbose)
               .pipe(parse_inspired_o2, verbose)
               .pipe(encode_alert, verbose)
               .pipe(handle_temperature, verbose)

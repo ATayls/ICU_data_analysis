@@ -40,3 +40,7 @@ stable_24hr_slope_min_max = {
 slope_categories = {
     "stable"
 }
+
+column_name_mapping = {
+    "NEWS_2_SCORE": "NEWS_2"
+}
