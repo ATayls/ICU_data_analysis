@@ -2,7 +2,7 @@
 File to contain all model training functions for ICU data.
 """
 from typing import List, Optional
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, StratifiedGroupKFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 import pandas as pd
@@ -87,6 +87,8 @@ def train_logistic_model_cv(
             "curves": fold_curves,
         }
         metric_list.append(fold_metrics)
+
+        # Update progress bar
         current_mean = np.around(np.mean([x['AUC ROC'] for x in metric_list]),4)
         current_std = np.around(np.std([x['AUC ROC'] for x in metric_list]),4)
         pbar.update(1)
@@ -166,3 +168,57 @@ def patient_sample(icu_df, replace=True, frac=1):
     unique_ids = icu_df["ADMISSION_ID"].unique()
     sampled_ids = np.random.choice(unique_ids, size=frac*len(unique_ids), replace=replace)
     return icu_df[icu_df["ADMISSION_ID"].isin(sampled_ids)].copy(deep=True)
+
+
+def train_logistic_model_CV_grouped(
+        icu_df: pd.DataFrame, independent_vars: List[str], dependant_var: str, groups: pd.Series,
+        folds: int = 5, tpr_match: Optional[float] = None, fpr_match: Optional[float] = None,
+        verbose: bool = False
+):
+    """
+    Train logistic regression model with given independent variables to classify dependant var.
+    Stratified K fold crossvalidated with non-overlapping patient groups.
+    """
+    X = icu_df[independent_vars]
+    y = icu_df[dependant_var]
+
+    cv_results = {}
+    skf = StratifiedGroupKFold(n_splits=folds)
+    skf.get_n_splits(X, y, groups)
+    metric_list = []
+    pbar = tqdm(total=folds, desc=f"DEWS2 {folds}FOLD CV", leave=True)
+    for i, indices in enumerate(skf.split(X, y, groups)):
+        train_index, test_index = indices
+        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+
+        if verbose:
+            print(f"FOLD: {i}")
+
+        logisticReg, test_pred = run_lr_train(X_train, X_test, y_train, y_test, verbose=verbose)
+
+        fold_metrics, fold_curves = get_metrics_and_curves(**test_pred,tpr_match=tpr_match, fpr_match=fpr_match)
+        cv_results[i] = {
+            "model": logisticReg,
+            "test_pred": test_pred,
+            "metrics": fold_metrics,
+            "curves": fold_curves,
+        }
+        metric_list.append(fold_metrics)
+
+        # Update progress bar
+        current_mean = np.around(np.mean([x['AUC ROC'] for x in metric_list]),4)
+        current_std = np.around(np.std([x['AUC ROC'] for x in metric_list]),4)
+        pbar.update(1)
+        pbar.set_description(
+            f"DEWS2 {folds}FOLD CV {current_mean} (+/- {current_std})",
+            refresh=True
+        )
+    pbar.close()
+
+    cv_results["CV_AVG"] = {
+        "metrics": pd.DataFrame(metric_list).mean().to_dict(),
+        "curves": crossvalidated_curve_stats(cv_results)
+        }
+
+    return cv_results
