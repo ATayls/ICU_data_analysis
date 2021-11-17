@@ -130,7 +130,7 @@ def train_logistic_model_bootstrapped(
         sample_class1 = patient_sample(icu_df[icu_df[dependant_var] == 1])
         sample = pd.concat([sample_class0, sample_class1])
 
-        if test_icu_df.empty :
+        if test_icu_df.empty or test_icu_df.equals(icu_df):
             oob = icu_df.iloc[list(set(icu_df.index) - set(sample.index))]
         else:
             sample_class0 = patient_sample(test_icu_df[test_icu_df[dependant_var] == 0])
