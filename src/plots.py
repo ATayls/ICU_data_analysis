@@ -10,12 +10,14 @@ import shap
 def roc_curve(tpr: np.array, fpr: np.array, name: str,
               tpr_std: Optional[np.array] = None,
               show_chance: Optional[bool] = True,
+              area_under_curve: Optional[float] = None,
               figure: Optional[plt.figure] = None,
               **kwargs
 ):
     if figure is None:
         figure = plt.figure()
-    area_under_curve = auc(fpr, tpr)
+    if not area_under_curve:
+        area_under_curve = auc(fpr, tpr)
 
     plt.plot(fpr, tpr, label=f'{name} (AUC=%0.3f)' % (area_under_curve), **kwargs)
 
@@ -67,18 +69,20 @@ def compare_cv_results(news2_cv_results: dict, dews_cv_results: dict, display_st
     news2_fpr = news2_cv_results["CV_AVG"]["curves"]["ROC"]["FPR"]
     news2_tpr = news2_cv_results["CV_AVG"]["curves"]["ROC"]["TPR"]
     news2_tpr_std = news2_cv_results["CV_AVG"]["curves"]["ROC"]["TPR STD"]
+    news2_auroc = news2_cv_results["CV_AVG"]["metrics"]["AUC ROC"]
     dews_fpr = dews_cv_results["CV_AVG"]["curves"]["ROC"]["FPR"]
     dews_tpr = dews_cv_results["CV_AVG"]["curves"]["ROC"]["TPR"]
     dews_tpr_std = dews_cv_results["CV_AVG"]["curves"]["ROC"]["TPR STD"]
+    dews_auroc = dews_cv_results["CV_AVG"]["metrics"]["AUC ROC"]
 
     if display_std:
-        figure = roc_curve(news2_tpr, news2_fpr, "NEWS-2", news2_tpr_std,
+        figure = roc_curve(news2_tpr, news2_fpr, "NEWS-2", news2_tpr_std, area_under_curve=news2_auroc,
                            linestyle='dashdot')
-        figure = roc_curve(dews_tpr, dews_fpr, "DEWS", dews_tpr_std,
+        figure = roc_curve(dews_tpr, dews_fpr, "DEWS", dews_tpr_std, area_under_curve=dews_auroc,
                            figure=figure)
     else:
-        figure = roc_curve(news2_tpr, news2_fpr, "NEWS-2", linestyle='dashdot')
-        figure = roc_curve(dews_tpr, dews_fpr, "DEWS", figure=figure)
+        figure = roc_curve(news2_tpr, news2_fpr, "NEWS-2", area_under_curve=news2_auroc, linestyle='dashdot')
+        figure = roc_curve(dews_tpr, dews_fpr, "DEWS", area_under_curve=dews_auroc, figure=figure)
     plt.show()
 
     ## PR CURVE ##
