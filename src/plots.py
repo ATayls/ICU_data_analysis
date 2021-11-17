@@ -1,8 +1,10 @@
-from typing import Optional, List
+from typing import Optional, List, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+from pandas import DataFrame
 from sklearn.metrics import auc
+import shap
 
 
 def roc_curve(tpr: np.array, fpr: np.array, name: str,
@@ -95,4 +97,26 @@ def compare_cv_results(news2_cv_results: dict, dews_cv_results: dict, display_st
     else:
         figure = pr_curve(news2_precision, news2_recall, "NEWS-2", linestyle='dashdot')
         figure = pr_curve(dews_precision, dews_recall, "DEWS", figure=figure)
+    plt.show()
+
+def shap_linear_summary(model: Any, data_scaled: DataFrame, feature_names: List[str]):
+    """ SHAP summary for Linear model """
+    print("Calculating SHAP values")
+    explainer = shap.LinearExplainer(model, data_scaled)
+    shap_values = explainer.shap_values(data_scaled)
+    shap.summary_plot(shap_values, data_scaled, feature_names=feature_names)
+
+
+def permutation_importance_plot(cv_results: dict, feature_names: List[str], title: Optional[str] = None):
+    # Feature importance
+    feature_importances = DataFrame(
+        [list(v["model"].coef_[0]) for k, v in cv_results.items() if k != "CV_AVG"],
+        columns=feature_names
+    )
+    feature_importances = feature_importances.reindex(
+        feature_importances.mean().sort_values().index, axis=1
+    )
+    feature_importances.boxplot(rot=90, fontsize=6)
+    if title:
+        plt.title(title)
     plt.show()
