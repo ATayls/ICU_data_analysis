@@ -40,12 +40,14 @@ def roc_curve(tpr: np.array, fpr: np.array, name: str,
 
 def pr_curve(precisions: np.array, recalls: np.array, name: str,
              precisions_std: Optional[np.array] = None,
+             area_under_curve: Optional[float] = None,
              figure: Optional[plt.figure] = None,
              **kwargs
 ):
     if figure is None:
         figure = plt.figure()
-    area_under_curve = auc(recalls, precisions)
+    if not area_under_curve:
+        area_under_curve = auc(recalls, precisions)
 
     plt.plot(recalls, precisions, label=f'{name} (AUC=%0.3f)' % (area_under_curve), **kwargs)
 
@@ -89,18 +91,20 @@ def compare_cv_results(news2_cv_results: dict, dews_cv_results: dict, display_st
     news2_recall = news2_cv_results["CV_AVG"]["curves"]["PR"]["R"]
     news2_precision = news2_cv_results["CV_AVG"]["curves"]["PR"]["P"]
     news2_precision_std = news2_cv_results["CV_AVG"]["curves"]["PR"]["P STD"]
+    news2_auprc = news2_cv_results["CV_AVG"]["metrics"]["AUC PR"]
     dews_recall = dews_cv_results["CV_AVG"]["curves"]["PR"]["R"]
     dews_precision = dews_cv_results["CV_AVG"]["curves"]["PR"]["P"]
     dews_precision_std = dews_cv_results["CV_AVG"]["curves"]["PR"]["P STD"]
+    dews_auprc = dews_cv_results["CV_AVG"]["metrics"]["AUC PR"]
 
     if display_std:
-        figure = pr_curve(news2_precision, news2_recall, "NEWS-2", news2_precision_std,
+        figure = pr_curve(news2_precision, news2_recall, "NEWS-2", news2_precision_std, area_under_curve=news2_auprc,
                           linestyle='dashdot')
-        figure = pr_curve(dews_precision, dews_recall, "DEWS", dews_precision_std,
+        figure = pr_curve(dews_precision, dews_recall, "DEWS", dews_precision_std, area_under_curve=dews_auprc,
                           figure=figure)
     else:
-        figure = pr_curve(news2_precision, news2_recall, "NEWS-2", linestyle='dashdot')
-        figure = pr_curve(dews_precision, dews_recall, "DEWS", figure=figure)
+        figure = pr_curve(news2_precision, news2_recall, "NEWS-2", area_under_curve=news2_auprc, linestyle='dashdot')
+        figure = pr_curve(dews_precision, dews_recall, "DEWS", area_under_curve=dews_auprc, figure=figure)
     plt.show()
 
 def shap_linear_summary(model: Any, data_scaled: DataFrame, feature_names: List[str]):
