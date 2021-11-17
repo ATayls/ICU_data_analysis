@@ -1,29 +1,28 @@
 from utils import load_data
 from preprocessing import preprocess
 from feature_engineering import create_features, get_all_feature_names
-from settings import PROC_DATA_DIR
+from settings import PROC_DATA_DIR, SAVED_RESULTS_DIR, PLOTS_DIR
 from news2_functions import bootstrap_news2
-from train import train_logistic_model_bootstrapped, train_logistic_model_CV_grouped
+from train import train_logistic_model_bootstrapped, train_logistic_model_CV_grouped, train_logistic_model_cv, run_lr_train
+from plots import compare_cv_results, shap_linear_summary, permutation_importance_plot
 
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
-################################################################################
-## Run configuration
-################################################################################
-
-# Run config
-DATA_VERSION = "1"
-FILENAME_TRAIN = 'Annotated dataset_validation_anonymised.xlsx'
-FILENAME_TEST = 'Annotated dataset_validation_anonymised.xlsx'
-TS_N_OBS = 5
-DEPENDANT_VAR = "4_HOURS_FROM_ANNOTATED_EVENT"
-N_BOOTSTRAPS = 300
 
 ################################################################################
 ## Extract and Transform function
 ################################################################################
 
 def ETL(filename: str, data_version: str, ts_n_obs: int):
+    """
+    Handles loading, preprocessing and feature engineering of data.
+    Loads existing base on data version.
+    :param filename: filename of data in settings.DATA_DIR
+    :param data_version: tracks preproc / FE changes
+    :param ts_n_obs: number of observations to use in timeseries calculations
+    :return:
+    """
     processed_fp = PROC_DATA_DIR.joinpath(
         f"V{data_version}/{ts_n_obs}OBS_{filename.split('.')[0]}.pkl"
     )
@@ -38,25 +37,70 @@ def ETL(filename: str, data_version: str, ts_n_obs: int):
         df = pd.read_pickle(processed_fp)
     return df
 
-##########################################################
-## Load data
-##########################################################
 
-df_tr = ETL(FILENAME_TRAIN, DATA_VERSION, TS_N_OBS)
-df_te = ETL(FILENAME_TEST, DATA_VERSION, TS_N_OBS)
+def main(
+    filename_train, filename_test, dependant_var, ts_n_obs, data_version, n_bootstraps
+):
+    """
+    Main experiment function
+    :param filename_train: filename of training data in settings.DATA_DIR
+    :param filename_test: filename of testing data in settings.DATA_DIR
+    :param dependant_var: target variable
+    :param ts_n_obs: number of observations to use in timeseries calculations
+    :param data_version: data versioning number
+    :param n_bootstraps: number of bootstraps
+    :return:
+    """
+    ##########################################################
+    ## Load data
+    ##########################################################
 
-##########################################################
-## Modelling
-##########################################################
-feature_list = get_all_feature_names()
-news2_bootstrapped_auc = bootstrap_news2(df_te, N_BOOTSTRAPS, DEPENDANT_VAR, threshold=5)
+    df_tr = ETL(filename_train, data_version, ts_n_obs)
+    df_te = ETL(filename_test, data_version, ts_n_obs)
 
-dews2_bs_results = train_logistic_model_bootstrapped(
-    df_tr, feature_list, DEPENDANT_VAR, N_BOOTSTRAPS, fpr_match=1-0.936,
-    test_icu_df=df_te
-)
-dews2_cvg_results = train_logistic_model_CV_grouped(
-    df_tr, feature_list, DEPENDANT_VAR, groups=df_tr["ADMISSION_ID"], folds=10, fpr_match=1-0.936
-)
+    ##########################################################
+    ## Modelling
+    ##########################################################
 
-print("")
+    feature_list = get_all_feature_names()
+    news2_results = bootstrap_news2(df_te, n_bootstraps, dependant_var, threshold=5)
+
+    # results_dict = train_logistic_model_bootstrapped(
+    #     df_tr, feature_list, dependant_var, n_bootstraps, fpr_match=1-0.936,
+    #     test_icu_df=df_tr
+    # )
+    results_dict = train_logistic_model_CV_grouped(
+        df_tr, feature_list, dependant_var, groups=df_tr["ADMISSION_ID"], folds=10, fpr_match=1-0.936
+    )
+
+    ##########################################################
+    ## Plots
+    ##########################################################
+
+    compare_cv_results(news2_results, results_dict)
+
+    permutation_importance_plot(results_dict, feature_list)
+
+    model_cv1 = results_dict[0]['model']
+    scaler = StandardScaler()
+    data_scaled = scaler.fit_transform(df_tr[feature_list])
+    shap_linear_summary(model_cv1, data_scaled, feature_list)
+
+
+if __name__ == '__main__':
+
+    ################################################################################
+    ## Run configuration
+    ################################################################################
+
+    # Run config
+    DATA_VERSION = "1"
+    FILENAME_TRAIN = 'Respiratory admissions April 2015 to December 2019 excel v11_anonymised.xlsx'
+    FILENAME_TEST = 'Respiratory admissions April 2015 to December 2019 excel v11_anonymised.xlsx'
+    TS_N_OBS = 5
+    DEPENDANT_VAR = "24_HOURS_FROM_EVENT"
+    N_BOOTSTRAPS = 50
+
+    main(FILENAME_TRAIN, FILENAME_TEST, DEPENDANT_VAR, TS_N_OBS, DATA_VERSION, N_BOOTSTRAPS)
+
+    print("")
