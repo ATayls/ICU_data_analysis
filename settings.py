@@ -9,6 +9,10 @@ RAW_DATA_DIR_PKL = ROOT_DIR.joinpath(r'raw_data/pickled/')
 # Processed data folders
 PROC_DATA_DIR = ROOT_DIR.joinpath(r'processed_data')
 
+# Saved results folder
+SAVED_RESULTS_DIR = ROOT_DIR.joinpath(r'saved_results')
+PLOTS_DIR = ROOT_DIR.joinpath(r"plots")
+
 standard_variables = [
     "TEMPERATURE",
     "SYSTOLIC_BP",
