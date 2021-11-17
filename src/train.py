@@ -12,16 +12,10 @@ from tqdm import tqdm
 from evaluation import get_metrics_and_curves, crossvalidated_curve_stats, confidence_intervals
 
 
-def run_lr_train(X_train, X_test, y_train, y_test, verbose=True):
+def run_lr_train(X_train, X_test, y_train, y_test, tpr_match=None, fpr_match=None, verbose=True):
     """
     Fit logistic regression with L2 regularization.
     Z-score scaling prior to model fit.
-    :param X_train:
-    :param X_test:
-    :param y_train:
-    :param y_test:
-    :param verbose:
-    :return:
     """
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
@@ -30,7 +24,7 @@ def run_lr_train(X_train, X_test, y_train, y_test, verbose=True):
     if verbose:
         print("Training logistic model with l2 penalty")
 
-    logisticReg = LogisticRegression(penalty="l2", max_iter=500, fit_intercept=False)
+    logisticReg = LogisticRegression(penalty="l2", max_iter=500, fit_intercept=True)
     logisticReg.fit(X_train, y_train)
 
     # LR predicitions
@@ -48,7 +42,18 @@ def run_lr_train(X_train, X_test, y_train, y_test, verbose=True):
         "y_probs": lr_probs,
     }
 
-    return logisticReg, predictions
+    fold_metrics, fold_curves = get_metrics_and_curves(
+        y_test=y_test, y_pred=y_pred, y_probs=lr_probs, tpr_match=tpr_match, fpr_match=fpr_match
+    )
+
+    result_dict = {
+        "model": logisticReg,
+        "test_pred": predictions,
+        "metrics": fold_metrics,
+        "curves": fold_curves,
+    }
+
+    return result_dict
 
 
 def train_logistic_model_cv(
@@ -76,17 +81,10 @@ def train_logistic_model_cv(
         if verbose:
             print(f"FOLD: {i}")
 
-        logisticReg, test_pred = run_lr_train(X_train, X_test, y_train, y_test, verbose=verbose)
+        results = run_lr_train(X_train, X_test, y_train, y_test, verbose=verbose)
 
-        fold_metrics, fold_curves = get_metrics_and_curves(**test_pred, tpr_match=tpr_match,
-                                                           fpr_match=fpr_match)
-        cv_results[i] = {
-            "model": logisticReg,
-            "test_pred": test_pred,
-            "metrics": fold_metrics,
-            "curves": fold_curves,
-        }
-        metric_list.append(fold_metrics)
+        cv_results[i] = results
+        metric_list.append(results["metrics"])
 
         # Update progress bar
         pbar.update(1)
@@ -139,16 +137,10 @@ def train_logistic_model_bootstrapped(
             sample_class1 = patient_sample(test_icu_df[test_icu_df[dependant_var] == 1])
             oob = pd.concat([sample_class0, sample_class1])
 
-        logisticReg, test_pred = run_lr_train(sample[independent_vars], oob[independent_vars], sample[dependant_var], oob[dependant_var], verbose=verbose)
+        results = run_lr_train(sample[independent_vars], oob[independent_vars], sample[dependant_var], oob[dependant_var], verbose=verbose)
 
-        fold_metrics, fold_curves = get_metrics_and_curves(**test_pred,tpr_match=tpr_match, fpr_match=fpr_match)
-        cv_results[completed_bootstraps] = {
-            "model": logisticReg,
-            "test_pred": test_pred,
-            "metrics": fold_metrics,
-            "curves": fold_curves,
-        }
-        metric_list.append(fold_metrics)
+        cv_results[completed_bootstraps] = results
+        metric_list.append(results["metrics"])
         completed_bootstraps += 1
 
         # Update progress bar
@@ -204,16 +196,10 @@ def train_logistic_model_CV_grouped(
         if verbose:
             print(f"FOLD: {i}")
 
-        logisticReg, test_pred = run_lr_train(X_train, X_test, y_train, y_test, verbose=verbose)
+        results = run_lr_train(X_train, X_test, y_train, y_test, verbose=verbose)
 
-        fold_metrics, fold_curves = get_metrics_and_curves(**test_pred,tpr_match=tpr_match, fpr_match=fpr_match)
-        cv_results[i] = {
-            "model": logisticReg,
-            "test_pred": test_pred,
-            "metrics": fold_metrics,
-            "curves": fold_curves,
-        }
-        metric_list.append(fold_metrics)
+        cv_results[i] = results
+        metric_list.append(results["metrics"])
 
         # Update progress bar
         pbar.update(1)
