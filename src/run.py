@@ -86,7 +86,7 @@ def main(
     ## Plots
     ##########################################################
 
-    compare_cv_results(news2_results_tr, results_dict_cv)
+    compare_cv_results(news2_results_tr, results_dict_bs)
 
     permutation_importance_plot(
         results_dict_cv, feature_list,
