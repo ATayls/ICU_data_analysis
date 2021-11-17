@@ -51,6 +51,7 @@ def main(
     :param n_bootstraps: number of bootstraps
     :return:
     """
+    print(f"RUN:\n--TRAIN:{filename_train}\n--TEST:{filename_test}")
     ##########################################################
     ## Load data
     ##########################################################
@@ -63,25 +64,36 @@ def main(
     ##########################################################
 
     feature_list = get_all_feature_names()
-    news2_results = bootstrap_news2(df_te, n_bootstraps, dependant_var, threshold=5)
+    news2_results_tr = bootstrap_news2(df_tr, n_bootstraps, dependant_var, threshold=5)
+    news2_results_te = bootstrap_news2(df_te, n_bootstraps, dependant_var, threshold=5)
 
-    # results_dict = train_logistic_model_bootstrapped(
-    #     df_tr, feature_list, dependant_var, n_bootstraps, fpr_match=1-0.936,
-    #     test_icu_df=df_tr
-    # )
-    results_dict = train_logistic_model_CV_grouped(
+    results_dict_bs = train_logistic_model_bootstrapped(
+        df_tr, feature_list, dependant_var, n_bootstraps, fpr_match=1-0.936
+    )
+    results_dict_cv = train_logistic_model_CV_grouped(
         df_tr, feature_list, dependant_var, groups=df_tr["ADMISSION_ID"], folds=10, fpr_match=1-0.936
     )
+
+    test_results_dict = run_lr_train(
+        df_tr[feature_list], df_te[feature_list], df_tr[DEPENDANT_VAR], df_te[DEPENDANT_VAR]
+    )
+    print(f"DEWS TEST RESULTS: AUROC:{test_results_dict['metrics']['AUC ROC']} "
+          f"AUPRC:{test_results_dict['metrics']['AUC PR']}")
+    print(f"NEWS2 TEST RESULTS: AUROC:{news2_results_te['CV_AVG']['metrics']['AUC ROC']} "
+          f"AUPRC:{news2_results_te['CV_AVG']['metrics']['AUC PR']}")
 
     ##########################################################
     ## Plots
     ##########################################################
 
-    compare_cv_results(news2_results, results_dict)
+    compare_cv_results(news2_results_tr, results_dict_cv)
 
-    permutation_importance_plot(results_dict, feature_list)
+    permutation_importance_plot(
+        results_dict_cv, feature_list,
+        title="Logistic Regression Feature Importance (10FoldCV)"
+    )
 
-    model_cv1 = results_dict[0]['model']
+    model_cv1 = test_results_dict['model']
     scaler = StandardScaler()
     data_scaled = scaler.fit_transform(df_tr[feature_list])
     shap_linear_summary(model_cv1, data_scaled, feature_list)
@@ -96,7 +108,7 @@ if __name__ == '__main__':
     # Run config
     DATA_VERSION = "1"
     FILENAME_TRAIN = 'Respiratory admissions April 2015 to December 2019 excel v11_anonymised.xlsx'
-    FILENAME_TEST = 'Respiratory admissions April 2015 to December 2019 excel v11_anonymised.xlsx'
+    FILENAME_TEST = 'Respiratory admissions January 2020 to December 2020 v1_anonymised.xlsx'
     TS_N_OBS = 5
     DEPENDANT_VAR = "24_HOURS_FROM_EVENT"
     N_BOOTSTRAPS = 50
