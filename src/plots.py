@@ -1,4 +1,5 @@
 from typing import Optional, List, Any
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -115,12 +116,15 @@ def shap_linear_summary(model: Any, data_scaled: DataFrame, feature_names: List[
     shap.summary_plot(shap_values, data_scaled, feature_names=feature_names)
 
 
-def permutation_importance_plot(cv_results: dict, feature_names: List[str], title: Optional[str] = None):
+def permutation_importance_plot(cv_results: dict, feature_names: List[str], title: Optional[str] = None,
+                                save_path: Optional[Path] = None):
     # Feature importance
     feature_importances = DataFrame(
         [list(v["model"].coef_[0]) for k, v in cv_results.items() if k != "CV_AVG"],
         columns=feature_names
     )
+    if save_path:
+        feature_importances.to_csv(save_path, index=False)
     feature_importances = feature_importances.reindex(
         feature_importances.mean().sort_values().index, axis=1
     )
