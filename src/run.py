@@ -67,29 +67,38 @@ def main(
     news2_results_tr = bootstrap_news2(df_tr, n_bootstraps, dependant_var, threshold=5)
     news2_results_te = bootstrap_news2(df_te, n_bootstraps, dependant_var, threshold=5)
 
-    results_dict_bs = train_logistic_model_bootstrapped(
+    print(f"A) Training on {filename_train}, validating with bootstrap & 10foldCV:")
+    results_dict_bs_tr = train_logistic_model_bootstrapped(
         df_tr, feature_list, dependant_var, n_bootstraps, fpr_match=1-0.936
     )
-    results_dict_cv = train_logistic_model_CV_grouped(
+    results_dict_cv_tr = train_logistic_model_CV_grouped(
         df_tr, feature_list, dependant_var, groups=df_tr["ADMISSION_ID"], folds=10, fpr_match=1-0.936
     )
 
+    print(f"A) Training on {filename_train}, testing on {filename_test} bootstrapping for confidence intervals")
+    results_dict_bs_te = train_logistic_model_bootstrapped(
+        df_tr, feature_list, dependant_var, n_bootstraps, fpr_match=1-0.936,
+        test_icu_df=df_te
+    )
+
+    print(f"Training on FULL DATASET {filename_train} , testing on {filename_test}")
     test_results_dict = run_lr_train(
         df_tr[feature_list], df_te[feature_list], df_tr[DEPENDANT_VAR], df_te[DEPENDANT_VAR]
     )
-    print(f"DEWS TEST RESULTS: AUROC:{test_results_dict['metrics']['AUC ROC']} "
+    print(f"FULL MODEL DEWS TEST RESULTS: AUROC:{test_results_dict['metrics']['AUC ROC']} "
           f"AUPRC:{test_results_dict['metrics']['AUC PR']}")
-    print(f"NEWS2 TEST RESULTS: AUROC:{news2_results_te['CV_AVG']['metrics']['AUC ROC']} "
+    print(f"FULL MODEL NEWS2 TEST RESULTS: AUROC:{news2_results_te['CV_AVG']['metrics']['AUC ROC']} "
           f"AUPRC:{news2_results_te['CV_AVG']['metrics']['AUC PR']}")
 
     ##########################################################
     ## Plots
     ##########################################################
 
-    compare_cv_results(news2_results_tr, results_dict_bs)
+    compare_cv_results(news2_results_tr, results_dict_bs_tr)
+    compare_cv_results(news2_results_te, results_dict_bs_te)
 
     permutation_importance_plot(
-        results_dict_cv, feature_list,
+        results_dict_cv_tr, feature_list,
         title="Logistic Regression Feature Importance (10FoldCV)"
     )
 
@@ -107,12 +116,17 @@ if __name__ == '__main__':
 
     # Run config
     DATA_VERSION = "1"
+    N_BOOTSTRAPS = 100
+    TS_N_OBS = 5
+
     FILENAME_TRAIN = 'Respiratory admissions April 2015 to December 2019 excel v11_anonymised.xlsx'
     FILENAME_TEST = 'Respiratory admissions January 2020 to December 2020 v1_anonymised.xlsx'
-    TS_N_OBS = 5
     DEPENDANT_VAR = "24_HOURS_FROM_EVENT"
-    N_BOOTSTRAPS = 50
+    main(FILENAME_TRAIN, FILENAME_TEST, DEPENDANT_VAR, TS_N_OBS, DATA_VERSION, N_BOOTSTRAPS)
 
+    FILENAME_TRAIN = 'Annotated_dataset_training_anonymised_V2.xlsx'
+    FILENAME_TEST = 'Annotated dataset_validation_anonymised.xlsx'
+    DEPENDANT_VAR = "4_HOURS_FROM_ANNOTATED_EVENT"
     main(FILENAME_TRAIN, FILENAME_TEST, DEPENDANT_VAR, TS_N_OBS, DATA_VERSION, N_BOOTSTRAPS)
 
     print("")
