@@ -64,10 +64,11 @@ def main(
     ##########################################################
 
     feature_list = get_all_feature_names()
+    print(f"\nA) Calculating NEWS2 results:")
     news2_results_tr = bootstrap_news2(df_tr, n_bootstraps, dependant_var, threshold=5)
     news2_results_te = bootstrap_news2(df_te, n_bootstraps, dependant_var, threshold=5)
 
-    print(f"A) Training on {filename_train}, validating with bootstrap & 10foldCV:")
+    print(f"\nB) Training on {filename_train}, validating with bootstrap & 10foldCV:")
     results_dict_bs_tr = train_logistic_model_bootstrapped(
         df_tr, feature_list, dependant_var, n_bootstraps, fpr_match=1-0.936
     )
@@ -75,7 +76,7 @@ def main(
         df_tr, feature_list, dependant_var, groups=df_tr["ADMISSION_ID"], folds=10, fpr_match=1-0.936
     )
 
-    print(f"A) Training on {filename_train}, testing on {filename_test} bootstrapping for confidence intervals")
+    print(f"\nC) Training on {filename_train}, testing on {filename_test} bootstrapping for confidence intervals")
     results_dict_bs_te = train_logistic_model_bootstrapped(
         df_tr, feature_list, dependant_var, n_bootstraps, fpr_match=1-0.936,
         test_icu_df=df_te
@@ -99,7 +100,8 @@ def main(
 
     permutation_importance_plot(
         results_dict_cv_tr, feature_list,
-        title="Logistic Regression Feature Importance (10FoldCV)"
+        title="Logistic Regression Feature Importance (10FoldCV)",
+        save_path=SAVED_RESULTS_DIR.joinpath(f"FI_{filename_train}.csv")
     )
 
     model_cv1 = test_results_dict['model']
@@ -116,7 +118,7 @@ if __name__ == '__main__':
 
     # Run config
     DATA_VERSION = "1"
-    N_BOOTSTRAPS = 100
+    N_BOOTSTRAPS = 250
     TS_N_OBS = 5
 
     FILENAME_TRAIN = 'Respiratory admissions April 2015 to December 2019 excel v11_anonymised.xlsx'
