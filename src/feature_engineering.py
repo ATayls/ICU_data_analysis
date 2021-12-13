@@ -14,9 +14,9 @@ from tsfresh import extract_features
 import settings
 
 
-def split_non_symetric(icu_df: pd.DataFrame, split_points: Dict[str, tuple[int, int]]) -> pd.DataFrame:
+def split_non_monotonic(icu_df: pd.DataFrame, split_points: Dict[str, tuple[int, int]]) -> pd.DataFrame:
     """
-    Non-symmetric relationships with dependant variable split into dichotomous variables.
+    Non-monotonic relationships with dependant variable split into dichotomous variables.
 
      "We allowed for non-symmetric effects of continuous predictors by breaking each physiological
      measurement into two variables reflecting positive (min (0, value-median value)) and
@@ -287,7 +287,7 @@ def create_features(icu_df: pd.DataFrame, periods: int, verbose: bool = True) ->
     """ Preprocessing pipeline for ICU datasets"""
     print("Running feature engineering pipeline")
     return (
-        icu_df.pipe(split_non_symetric, settings.split_points)
+        icu_df.pipe(split_non_monotonic, settings.split_points)
               .pipe(create_time_delta)
               .pipe(create_ts_base_features, settings.standard_variables, periods=periods)
               .pipe(create_ts_slope_features, settings.standard_variables, periods=periods)

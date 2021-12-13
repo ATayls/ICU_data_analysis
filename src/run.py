@@ -82,7 +82,7 @@ def main(
         test_icu_df=df_te
     )
 
-    print(f"Training on FULL DATASET {filename_train} , testing on {filename_test}")
+    print(f"\nTraining on FULL DATASET {filename_train} , testing on {filename_test}")
     test_results_dict = run_lr_train(
         df_tr[feature_list], df_te[feature_list], df_tr[DEPENDANT_VAR], df_te[DEPENDANT_VAR]
     )
