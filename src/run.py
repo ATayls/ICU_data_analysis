@@ -95,19 +95,45 @@ def main(
     ## Plots
     ##########################################################
 
-    compare_cv_results(news2_results_tr, results_dict_bs_tr)
-    compare_cv_results(news2_results_te, results_dict_bs_te)
+    compare_cv_results(
+        news2_results_tr,
+        results_dict_bs_tr,
+        ROC_save_path=PLOTS_DIR.joinpath(f"V{data_version}",
+            f"ROC_TRAINON_{filename_train.split('.')[0]}_bootstrapped.png"
+        ),
+        PR_save_path = PLOTS_DIR.joinpath(f"V{data_version}",
+            f"PR_TRAINON_{filename_train.split('.')[0]}_bootstrapped.png"
+        )
+    )
+    compare_cv_results(
+        news2_results_te,
+        results_dict_bs_te,
+        ROC_save_path=PLOTS_DIR.joinpath(f"V{data_version}",
+            f"ROC_TRAINON_{filename_train.split('.')[0]}_TESTON_{filename_test.split('.')[0]}.png"),
+        PR_save_path=PLOTS_DIR.joinpath(f"V{data_version}",
+            f"PR_TRAINON_{filename_train.split('.')[0]}_TESTON_{filename_test.split('.')[0]}.png")
+    )
 
     permutation_importance_plot(
         results_dict_cv_tr, feature_list,
         title="Logistic Regression Feature Importance (10FoldCV)",
-        save_path=SAVED_RESULTS_DIR.joinpath(f"FI_{filename_train}.csv")
+        csv_save_path=SAVED_RESULTS_DIR.joinpath(f"V{data_version}",
+            f"FI_{filename_train.split('.')[0]}.csv"
+        ),
+        plot_save_path=PLOTS_DIR.joinpath(f"V{data_version}",
+            f"Permuation_Importance_{filename_train.split('.')[0]}.png"
+        )
     )
 
     model_cv1 = test_results_dict['model']
     scaler = StandardScaler()
     data_scaled = scaler.fit_transform(df_tr[feature_list])
-    shap_linear_summary(model_cv1, data_scaled, feature_list)
+    shap_linear_summary(
+        model_cv1, data_scaled, feature_list,
+        plot_save_path=PLOTS_DIR.joinpath(f"V{data_version}",
+            f"SHAP_{filename_train.split('.')[0]}.png"
+        )
+    )
 
 
 if __name__ == '__main__':

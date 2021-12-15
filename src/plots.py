@@ -67,7 +67,13 @@ def pr_curve(precisions: np.array, recalls: np.array, name: str,
     return figure
 
 
-def compare_cv_results(news2_cv_results: dict, dews_cv_results: dict, display_std: bool = False):
+def compare_cv_results(
+        news2_cv_results: dict,
+        dews_cv_results: dict,
+        display_std: bool = False,
+        ROC_save_path: Optional[Path] = None,
+        PR_save_path: Optional[Path] = None,
+):
     ### ROC ###
     news2_fpr = news2_cv_results["CV_AVG"]["curves"]["ROC"]["FPR"]
     news2_tpr = news2_cv_results["CV_AVG"]["curves"]["ROC"]["TPR"]
@@ -86,6 +92,9 @@ def compare_cv_results(news2_cv_results: dict, dews_cv_results: dict, display_st
     else:
         figure = roc_curve(news2_tpr, news2_fpr, "NEWS-2", area_under_curve=news2_auroc, linestyle='dashdot')
         figure = roc_curve(dews_tpr, dews_fpr, "DEWS", area_under_curve=dews_auroc, figure=figure)
+    if ROC_save_path:
+        ROC_save_path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(ROC_save_path, bbox_inches='tight')
     plt.show()
 
     ## PR CURVE ##
@@ -106,29 +115,51 @@ def compare_cv_results(news2_cv_results: dict, dews_cv_results: dict, display_st
     else:
         figure = pr_curve(news2_precision, news2_recall, "NEWS-2", area_under_curve=news2_auprc, linestyle='dashdot')
         figure = pr_curve(dews_precision, dews_recall, "DEWS", area_under_curve=dews_auprc, figure=figure)
+    if PR_save_path:
+        PR_save_path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(PR_save_path, bbox_inches='tight')
     plt.show()
 
-def shap_linear_summary(model: Any, data_scaled: DataFrame, feature_names: List[str]):
+def shap_linear_summary(
+        model: Any,
+        data_scaled: DataFrame,
+        feature_names: List[str],
+        plot_save_path: Optional[Path] = None,
+):
     """ SHAP summary for Linear model """
     print("Calculating SHAP values")
     explainer = shap.LinearExplainer(model, data_scaled)
     shap_values = explainer.shap_values(data_scaled)
-    shap.summary_plot(shap_values, data_scaled, feature_names=feature_names)
+    shap.summary_plot(shap_values, data_scaled, feature_names=feature_names, show=False)
+    if plot_save_path:
+        plot_save_path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(plot_save_path, bbox_inches='tight')
+    plt.show()
 
 
-def permutation_importance_plot(cv_results: dict, feature_names: List[str], title: Optional[str] = None,
-                                save_path: Optional[Path] = None):
+def permutation_importance_plot(
+        cv_results: dict,
+        feature_names: List[str],
+        title: Optional[str] = None,
+        csv_save_path: Optional[Path] = None,
+        plot_save_path: Optional[Path] = None,
+):
     # Feature importance
     feature_importances = DataFrame(
         [list(v["model"].coef_[0]) for k, v in cv_results.items() if k != "CV_AVG"],
         columns=feature_names
     )
-    if save_path:
-        feature_importances.to_csv(save_path, index=False)
+    if csv_save_path:
+        csv_save_path.parent.mkdir(parents=True, exist_ok=True)
+        feature_importances.to_csv(csv_save_path, index=False)
+
     feature_importances = feature_importances.reindex(
         feature_importances.mean().sort_values().index, axis=1
     )
     feature_importances.boxplot(rot=90, fontsize=6)
     if title:
         plt.title(title)
+    if plot_save_path:
+        plot_save_path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(plot_save_path, bbox_inches='tight')
     plt.show()
