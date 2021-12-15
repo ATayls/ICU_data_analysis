@@ -14,6 +14,19 @@ from tsfresh import extract_features
 import settings
 
 
+def selective_fillna_columns(df_in: pd.DataFrame, mode="mean") -> pd.DataFrame:
+    """Apply fill na only to columns that require."""
+    df = df_in.copy()
+    for i in df.columns[df.isnull().any(axis=0)]:  # ---Applying Only on variables with NaN values
+        if mode == "mean":
+            df[i].fillna(df[i].mean(), inplace=True)
+        elif mode == "median":
+            df[i].fillna(df[i].median(), inplace=True)
+        else:
+            raise ValueError(f"Unrecognised mode: {mode}")
+    return df
+
+
 def split_non_monotonic(icu_df: pd.DataFrame, split_points: Dict[str, tuple[int, int]]) -> pd.DataFrame:
     """
     Non-monotonic relationships with dependant variable split into dichotomous variables.
@@ -56,8 +69,8 @@ def create_diff(icu_df: pd.DataFrame, variables: List[str]) -> pd.DataFrame:
             .groupby('ADMISSION_ID')
             .transform(lambda s: s.diff(1))
             .add_suffix("_DIFF")
-            .fillna(0.0)
     )
+    DIFF = selective_fillna_columns(DIFF, mode="mean")
     return pd.concat([icu_df, DIFF], axis=1)
 
 
@@ -76,8 +89,8 @@ def create_rolling(icu_df: pd.DataFrame, variables: List[str], periods: int) -> 
         icu_df.groupby('ADMISSION_ID')[variables]
             .transform(lambda s: s.rolling(periods, min_periods=1).std())
             .add_suffix("_ROLSTD")
-            .fillna(0.0)
     )
+    ROLSTD = selective_fillna_columns(ROLSTD, mode="mean")
     return pd.concat([icu_df, ROLAVG, ROLSTD], axis=1)
 
 
@@ -96,8 +109,8 @@ def create_expanding(icu_df: pd.DataFrame, variables: List[str]) -> pd.DataFrame
         icu_df.groupby('ADMISSION_ID')[variables]
             .transform(lambda s: s.expanding(min_periods=1).std())
             .add_suffix("_ALLSTD")
-            .fillna(0.0)
     )
+    ALLSTD = selective_fillna_columns(ALLSTD, mode="mean")
     return pd.concat([icu_df, ALLAVG, ALLSTD], axis=1)
 
 
@@ -204,7 +217,7 @@ def create_ts_slope_features(
     icu_df_ts = icu_df.merge(SLOPE_features, how="left", on=["ADMISSION_ID", time_col])
 
     # Fill nan slopes with 0 slope
-    icu_df_ts[new_feature_cols] = icu_df_ts[new_feature_cols].fillna(value=0.0)
+    icu_df_ts[new_feature_cols] = selective_fillna_columns(icu_df_ts[new_feature_cols], mode="mean")
 
     return icu_df_ts
 
