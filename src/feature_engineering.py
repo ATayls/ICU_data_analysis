@@ -4,7 +4,7 @@ File to contain all feature engineering functions for ICU data.
 
 import time
 import functools
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 import pandas as pd
 import numpy as np
@@ -27,7 +27,7 @@ def selective_fillna_columns(df_in: pd.DataFrame, mode="mean") -> pd.DataFrame:
     return df
 
 
-def split_non_monotonic(icu_df: pd.DataFrame, split_points: Dict[str, tuple[int, int]]) -> pd.DataFrame:
+def split_non_monotonic(icu_df: pd.DataFrame, split_points: Dict[str, Tuple[int, int]]) -> pd.DataFrame:
     """
     Non-monotonic relationships with dependant variable split into dichotomous variables.
 
@@ -223,7 +223,7 @@ def create_ts_slope_features(
 
 
 def categorise_slopes(icu_df: pd.DataFrame,
-                      stable_thresholds: Dict[str, tuple[float, float]],
+                      stable_thresholds: Dict[str, Tuple[float, float]],
 ):
     """
     Categorise the SLOPE_TIMEWISE Variables.
@@ -237,7 +237,7 @@ def categorise_slopes(icu_df: pd.DataFrame,
     return icu_df
 
 
-def categorise_obs_slope(row: pd.Series, var_name: str, thresholds: tuple[float, float]):
+def categorise_obs_slope(row: pd.Series, var_name: str, thresholds: Tuple[float, float]):
     """
     Slope categorisation to apply to pandas dataframe row-wise.
     """
