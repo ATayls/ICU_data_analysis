@@ -5,6 +5,8 @@ from settings import PROC_DATA_DIR, SAVED_RESULTS_DIR, PLOTS_DIR
 from news2_functions import bootstrap_news2
 from train import train_logistic_model_bootstrapped, train_logistic_model_CV_grouped, train_logistic_model_cv, run_lr_train
 from plots import compare_cv_results, shap_linear_summary, permutation_importance_plot
+from export_as_excel import export
+import settings
 
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -39,7 +41,8 @@ def ETL(filename: str, data_version: str, ts_n_obs: int):
 
 
 def main(
-    filename_train, filename_test, dependant_var, ts_n_obs, data_version, n_bootstraps
+    filename_train, filename_test, dependant_var, ts_n_obs, data_version, n_bootstraps,
+    write_to_excel = False
 ):
     """
     Main experiment function
@@ -90,6 +93,30 @@ def main(
           f"AUPRC:{test_results_dict['metrics']['AUC PR']}")
     print(f"FULL MODEL NEWS2 TEST RESULTS: AUROC:{news2_results_te['CV_AVG']['metrics']['AUC ROC']} "
           f"AUPRC:{news2_results_te['CV_AVG']['metrics']['AUC PR']}")
+
+    ##########################################################
+    ## Export to excel
+    ##########################################################
+    if write_to_excel:
+        identifying_features = [
+            "ADMISSION_ID",
+            "OBS_DAYS_SINCE_ADMISSION",
+            "OBS_TIME",
+            "DIED_FLAG",
+            "ICU_FLAG",
+        ]
+
+        export(
+            df=df_te.copy(),
+            trained_lr_model=test_results_dict['model'],
+            original_fields=identifying_features + [dependant_var] + settings.standard_variables,
+            feature_list=feature_list,
+            fitted_scaler=StandardScaler().fit(df_tr[feature_list]),
+            metrics=test_results_dict['metrics'],
+            save_path=SAVED_RESULTS_DIR.joinpath(f"V{data_version}",
+                f"FullModel_{filename_test.split('.')[0]}_TRAINEDON_{filename_train.split('.')[0]}.xlsx"
+            ),
+        )
 
     ##########################################################
     ## Plots
