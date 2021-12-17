@@ -4,7 +4,7 @@ File to contain all feature engineering functions for ICU data.
 
 import time
 import functools
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 
 import pandas as pd
 import numpy as np
@@ -164,7 +164,9 @@ def create_slopes_cached(icu_df: pd.DataFrame, variables: List[str], periods: in
 
 
 def create_ts_slope_features(
-        icu_df: pd.DataFrame, variables: List[str], periods: int, time_col: str = "TIME"
+        icu_df: pd.DataFrame, variables: List[str], periods: int, time_col: str = "TIME",
+        create_slope_categories: bool = True,
+        stable_thresholds: Optional[Dict[str, Tuple[float, float]]] = None
 ) -> pd.DataFrame:
     """
     Calculate variable slopes both linear trend and linear trend timewise.
@@ -172,6 +174,7 @@ def create_ts_slope_features(
     """
     icu_df = icu_df.copy()
     print("Calculating tsfresh time series features")
+    original_columns = list(icu_df.columns.copy())
 
     # Time delta column must be present in the dataframe
     assert(time_col in icu_df.columns), f"{time_col} not found in dataframe"
@@ -207,7 +210,6 @@ def create_ts_slope_features(
             i: i.split("__")[0]+mapping[i.split("__")[1]] for i in icu_df_features.columns.to_list()
         }
     )
-    new_feature_cols = icu_df_features.columns.to_list()
 
     # merge features back into original dataframe
     SLOPE_features = (
@@ -216,8 +218,19 @@ def create_ts_slope_features(
     )
     icu_df_ts = icu_df.merge(SLOPE_features, how="left", on=["ADMISSION_ID", time_col])
 
+    new_slope_cols = list(set(icu_df_ts.columns) - set(original_columns))
+
+    # Categorise slopes
+    if create_slope_categories and stable_thresholds:
+        icu_df_ts = categorise_slopes(icu_df_ts, stable_thresholds)
+    elif create_slope_categories and not stable_thresholds:
+        raise ValueError("Stable thresholds must be defined for slope categorisation")
+
+    new_cat_cols = list(set(icu_df_ts.columns) - set(original_columns + new_slope_cols))
+
     # Fill nan slopes with 0 slope
-    icu_df_ts[new_feature_cols] = selective_fillna_columns(icu_df_ts[new_feature_cols], mode="mean")
+    icu_df_ts[new_slope_cols] = selective_fillna_columns(icu_df_ts[new_slope_cols], mode="mean")
+    icu_df_ts[new_cat_cols] = selective_fillna_columns(icu_df_ts[new_cat_cols], mode="median")
 
     return icu_df_ts
 
@@ -241,6 +254,9 @@ def categorise_obs_slope(row: pd.Series, var_name: str, thresholds: Tuple[float,
     """
     Slope categorisation to apply to pandas dataframe row-wise.
     """
+    if np.isnan(row[var_name + "_SLOPE_TIMEWISE"]):
+        return row[var_name + "_SLOPE_TIMEWISE"]
+
     stable_min, stable_max = thresholds
     stable_min /= 24
     stable_max /= 24
@@ -303,8 +319,12 @@ def create_features(icu_df: pd.DataFrame, periods: int, verbose: bool = True) ->
         icu_df.pipe(split_non_monotonic, settings.split_points)
               .pipe(create_time_delta)
               .pipe(create_ts_base_features, settings.standard_variables, periods=periods)
-              .pipe(create_ts_slope_features, settings.standard_variables, periods=periods)
-              .pipe(categorise_slopes, settings.stable_24hr_slope_min_max)
+              .pipe(create_ts_slope_features,
+                    settings.standard_variables,
+                    periods=periods,
+                    create_slope_categories=True,
+                    stable_thresholds=settings.stable_24hr_slope_min_max
+              )
     )
 
 
