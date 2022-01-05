@@ -230,7 +230,7 @@ def create_ts_slope_features(
 
     # Fill nan slopes with 0 slope
     icu_df_ts[new_slope_cols] = selective_fillna_columns(icu_df_ts[new_slope_cols], mode="mean")
-    icu_df_ts[new_cat_cols] = selective_fillna_columns(icu_df_ts[new_cat_cols], mode="median")
+    icu_df_ts[new_cat_cols] = selective_fillna_columns(icu_df_ts[new_cat_cols], mode="mean")
 
     return icu_df_ts
 
