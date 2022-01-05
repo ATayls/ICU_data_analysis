@@ -24,3 +24,16 @@ def load_data(filename: str) -> pd.DataFrame:
     else:
         raise ValueError(f"{raw_path} not found.")
     return df
+
+
+def drop_first_n_observations(df: pd.DataFrame, identifier: str, n_obs: int) -> pd.DataFrame:
+    """ Drops the first n obs for each identifier group. Assumes input dataframe is ordered."""
+
+    df["__COUNT__"] = 1
+    df["__CUMSUM__"] = (
+        df.groupby(identifier)["__COUNT__"]
+            .cumsum()
+    )
+    return df[~df["__CUMSUM__"].isin(list(range(1, n_obs+1)))].drop(
+        columns=["__CUMSUM__", "__COUNT__"]
+    ).reset_index(drop=True)
