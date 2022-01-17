@@ -1,4 +1,6 @@
-from utils import load_data
+from typing import Optional
+
+from utils import load_data, drop_first_n_observations
 from preprocessing import preprocess
 from feature_engineering import create_features, get_all_feature_names
 from settings import PROC_DATA_DIR, SAVED_RESULTS_DIR, PLOTS_DIR
@@ -16,13 +18,14 @@ from sklearn.preprocessing import StandardScaler
 ## Extract and Transform function
 ################################################################################
 
-def ETL(filename: str, data_version: str, ts_n_obs: int):
+def ETL(filename: str, data_version: str, ts_n_obs: int, drop_first_n: Optional[int] = None):
     """
     Handles loading, preprocessing and feature engineering of data.
     Loads existing base on data version.
     :param filename: filename of data in settings.DATA_DIR
     :param data_version: tracks preproc / FE changes
     :param ts_n_obs: number of observations to use in timeseries calculations
+    :param drop_first_n: first n observations to drop
     :return:
     """
     processed_fp = PROC_DATA_DIR.joinpath(
@@ -37,12 +40,15 @@ def ETL(filename: str, data_version: str, ts_n_obs: int):
         df.to_pickle(processed_fp)
     else:
         df = pd.read_pickle(processed_fp)
+    if drop_first_n:
+        df = drop_first_n_observations(df, identifier='ADMISSION_ID', n_obs=drop_first_n)
     return df
 
 
 def main(
     filename_train, filename_test, dependant_var, ts_n_obs, data_version, n_bootstraps,
-    write_to_excel = False
+    write_to_excel = False,
+    drop_first_n_observations = None,
 ):
     """
     Main experiment function
@@ -59,8 +65,8 @@ def main(
     ## Load data
     ##########################################################
 
-    df_tr = ETL(filename_train, data_version, ts_n_obs)
-    df_te = ETL(filename_test, data_version, ts_n_obs)
+    df_tr = ETL(filename_train, data_version, ts_n_obs, drop_first_n_observations)
+    df_te = ETL(filename_test, data_version, ts_n_obs, drop_first_n_observations)
 
     ##########################################################
     ## Modelling
@@ -170,18 +176,20 @@ if __name__ == '__main__':
     ################################################################################
 
     # Run config
-    DATA_VERSION = "5"
+    DATA_VERSION = "6"
     N_BOOTSTRAPS = 250
     TS_N_OBS = 5
 
     FILENAME_TRAIN = 'Respiratory admissions April 2015 to December 2019 excel v11_anonymised.xlsx'
     FILENAME_TEST = 'Respiratory admissions January 2020 to December 2020 v1_anonymised.xlsx'
     DEPENDANT_VAR = "24_HOURS_FROM_EVENT"
-    main(FILENAME_TRAIN, FILENAME_TEST, DEPENDANT_VAR, TS_N_OBS, DATA_VERSION, N_BOOTSTRAPS)
+    main(FILENAME_TRAIN, FILENAME_TEST, DEPENDANT_VAR, TS_N_OBS, DATA_VERSION, N_BOOTSTRAPS,
+         drop_first_n_observations=2)
 
     FILENAME_TRAIN = 'Annotated_dataset_training_anonymised_V2.xlsx'
     FILENAME_TEST = 'Annotated dataset_validation_anonymised.xlsx'
     DEPENDANT_VAR = "4_HOURS_FROM_ANNOTATED_EVENT"
-    main(FILENAME_TRAIN, FILENAME_TEST, DEPENDANT_VAR, TS_N_OBS, DATA_VERSION, N_BOOTSTRAPS)
+    main(FILENAME_TRAIN, FILENAME_TEST, DEPENDANT_VAR, TS_N_OBS, DATA_VERSION, N_BOOTSTRAPS,
+         drop_first_n_observations=2)
 
     print("")
