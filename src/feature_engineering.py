@@ -114,6 +114,14 @@ def create_expanding(icu_df: pd.DataFrame, variables: List[str]) -> pd.DataFrame
     return pd.concat([icu_df, ALLAVG, ALLSTD], axis=1)
 
 
+def create_dev_from_avg(icu_df: pd.DataFrame, variables: List[str]) -> pd.DataFrame:
+    icu_df = icu_df.copy()
+    for variable in variables:
+        icu_df[f"{variable}_DEV_FROM_AVG"] = (icu_df[f"{variable}_ALLAVG"] - icu_df[f"{variable}"])/(icu_df[f"{variable}_ALLSTD"])
+        icu_df[f"{variable}_DEV_FROM_AVG"] = icu_df[f"{variable}_DEV_FROM_AVG"].fillna(0.0)
+    return icu_df
+
+
 def create_ts_base_features(
         icu_df: pd.DataFrame, variables: List[str], periods: int = 3
 ) -> pd.DataFrame:
@@ -131,6 +139,7 @@ def create_ts_base_features(
         icu_df.pipe(create_diff, variables)
               .pipe(create_rolling, variables, periods)
               .pipe(create_expanding, variables)
+              .pipe(create_dev_from_avg, variables)
     )
 
 
@@ -339,7 +348,7 @@ def get_all_feature_names():
     # timeseries features
     ts_features = [
         f'{var}_{f}' for var in settings.standard_variables
-        for f in ['DIFF', 'ROLAVG', 'ROLSTD', 'ALLAVG', 'ALLSTD']
+        for f in ['DIFF', 'ROLAVG', 'ROLSTD', 'DEV_FROM_AVG']
     ]
     # slope features
     slope_features = [f"{var}_SLOPE" for var in settings.standard_variables]
