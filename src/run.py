@@ -101,6 +101,35 @@ def main(
           f"AUPRC:{news2_results_te['CV_AVG']['metrics']['AUC PR']}")
 
     ##########################################################
+    ## Save raw results
+    ##########################################################
+
+    save_list = [
+        ("NEWS2", f"{n_bootstraps}_bootstraps", news2_results_tr),
+        ("NEWS2", filename_test.split('.')[0], news2_results_te),
+        ("DEWS2", f"{n_bootstraps}_bootstraps", results_dict_bs_tr),
+        ("DEWS2", "CV10fold", results_dict_cv_tr),
+        ("DEWS2", filename_test.split('.')[0], results_dict_bs_te),
+    ]
+    results_df_list = []
+    for model_name, test_on, results_dict in save_list:
+        r_subset = pd.DataFrame.from_dict(
+            {k: v for k, v in results_dict["CV_AVG"].items() if k != 'curves'}
+        )
+        r_subset["model"] = model_name
+        r_subset["test_on"] = test_on
+        r_subset = r_subset.reset_index().rename(columns={"index":"metric","metrics":"value"})
+        results_df_list.append(
+            r_subset
+        )
+    all_results = pd.concat(results_df_list).sort_values(by=["metric","model","test_on"])
+    save_path = SAVED_RESULTS_DIR.joinpath(f"V{data_version}", f"results_TRAIN_ON_{filename_train.split('.')[0]}.csv")
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    all_results[["model","test_on","metric","value",'CI_95_lower',"CI_95_upper"]].to_csv(
+        save_path, index=False
+    )
+
+    ##########################################################
     ## Export to excel
     ##########################################################
     if write_to_excel:
