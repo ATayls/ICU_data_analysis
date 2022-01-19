@@ -73,6 +73,7 @@ def compare_cv_results(
         display_std: bool = False,
         ROC_save_path: Optional[Path] = None,
         PR_save_path: Optional[Path] = None,
+        JOINT_save_path: Optional[Path] = None,
 ):
     ### ROC ###
     news2_fpr = news2_cv_results["CV_AVG"]["curves"]["ROC"]["FPR"]
@@ -84,18 +85,27 @@ def compare_cv_results(
     dews_tpr_std = dews_cv_results["CV_AVG"]["curves"]["ROC"]["TPR STD"]
     dews_auroc = dews_cv_results["CV_AVG"]["metrics"]["AUC ROC"]
 
+    if JOINT_save_path:
+        figure, axarr = plt.subplots(1, 2, figsize=(12, 6))
+        plt.sca(axarr[0])
+    else:
+        figure = None
+
     if display_std:
         figure = roc_curve(news2_tpr, news2_fpr, "NEWS-2", news2_tpr_std, area_under_curve=news2_auroc,
-                           linestyle='dashdot')
+                           linestyle='dashdot', figure=figure)
         figure = roc_curve(dews_tpr, dews_fpr, "DEWS", dews_tpr_std, area_under_curve=dews_auroc,
                            figure=figure)
     else:
-        figure = roc_curve(news2_tpr, news2_fpr, "NEWS-2", area_under_curve=news2_auroc, linestyle='dashdot')
+        figure = roc_curve(news2_tpr, news2_fpr, "NEWS-2", area_under_curve=news2_auroc, linestyle='dashdot',
+                           figure=figure)
         figure = roc_curve(dews_tpr, dews_fpr, "DEWS", area_under_curve=dews_auroc, figure=figure)
     if ROC_save_path:
         ROC_save_path.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(ROC_save_path, bbox_inches='tight')
-    plt.show()
+    elif not JOINT_save_path:
+        plt.tight_layout()
+        plt.show()
 
     ## PR CURVE ##
     news2_recall = news2_cv_results["CV_AVG"]["curves"]["PR"]["R"]
@@ -107,18 +117,32 @@ def compare_cv_results(
     dews_precision_std = dews_cv_results["CV_AVG"]["curves"]["PR"]["P STD"]
     dews_auprc = dews_cv_results["CV_AVG"]["metrics"]["AUC PR"]
 
+    if JOINT_save_path:
+        plt.sca(axarr[1])
+    else:
+        figure = None
+
     if display_std:
         figure = pr_curve(news2_precision, news2_recall, "NEWS-2", news2_precision_std, area_under_curve=news2_auprc,
-                          linestyle='dashdot')
+                          linestyle='dashdot', figure=figure)
         figure = pr_curve(dews_precision, dews_recall, "DEWS", dews_precision_std, area_under_curve=dews_auprc,
                           figure=figure)
     else:
-        figure = pr_curve(news2_precision, news2_recall, "NEWS-2", area_under_curve=news2_auprc, linestyle='dashdot')
+        figure = pr_curve(news2_precision, news2_recall, "NEWS-2", area_under_curve=news2_auprc, linestyle='dashdot',
+                          figure=figure)
         figure = pr_curve(dews_precision, dews_recall, "DEWS", area_under_curve=dews_auprc, figure=figure)
     if PR_save_path:
         PR_save_path.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(PR_save_path, bbox_inches='tight')
-    plt.show()
+    elif not JOINT_save_path:
+        plt.tight_layout()
+        plt.show()
+
+    if JOINT_save_path:
+        plt.tight_layout()
+        JOINT_save_path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(JOINT_save_path, bbox_inches='tight')
+        plt.show()
 
 def shap_linear_summary(
         model: Any,

@@ -131,20 +131,15 @@ def main(
     compare_cv_results(
         news2_results_tr,
         results_dict_bs_tr,
-        ROC_save_path=PLOTS_DIR.joinpath(f"V{data_version}",
-            f"ROC_TRAINON_{filename_train.split('.')[0]}_bootstrapped.png"
-        ),
-        PR_save_path = PLOTS_DIR.joinpath(f"V{data_version}",
-            f"PR_TRAINON_{filename_train.split('.')[0]}_bootstrapped.png"
+        JOINT_save_path=PLOTS_DIR.joinpath(f"V{data_version}",
+            f"ROC_PR_TRAINON_{filename_train.split('.')[0]}_bootstrapped.png"
         )
     )
     compare_cv_results(
         news2_results_te,
         results_dict_bs_te,
-        ROC_save_path=PLOTS_DIR.joinpath(f"V{data_version}",
-            f"ROC_TRAINON_{filename_train.split('.')[0]}_TESTON_{filename_test.split('.')[0]}.png"),
-        PR_save_path=PLOTS_DIR.joinpath(f"V{data_version}",
-            f"PR_TRAINON_{filename_train.split('.')[0]}_TESTON_{filename_test.split('.')[0]}.png")
+        JOINT_save_path=PLOTS_DIR.joinpath(f"V{data_version}",
+            f"ROC_PR_TRAINON_{filename_train.split('.')[0]}_TESTON_{filename_test.split('.')[0]}.png"),
     )
 
     permutation_importance_plot(
