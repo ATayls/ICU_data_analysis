@@ -270,7 +270,7 @@ def categorise_obs_slope(row: pd.Series, var_name: str, thresholds: Tuple[float,
         else:
             # Stable
             return 3
-    elif (var_name == "INSPIRED_O2_LITRES") or (var_name == "INSPIRED_O2_%"):
+    elif ("INSPIRED_O2" in var_name) or ("INSP_O2" in var_name) :
         if row[var_name+"_SLOPE_TIMEWISE"] < stable_min:
             # Improving
             return 2
