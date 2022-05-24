@@ -29,8 +29,8 @@ def export(
     lr = lr + trained_lr_model.intercept_[0]
     assert(trained_lr_model.intercept_scaling == 1)
     probs = 1 - lr.apply(lambda x: 1 / (1 + np.exp(x)))
-    probs_df = pd.concat([df[["ADMISSION_ID", "OBS_TIME"]], probs], axis=1)
-    probs_df.columns = ["ADMISSION_ID", "OBS_TIME", "PROBABILITY"]
+    probs_df = pd.concat([df[["ADMISSION_ID", "OBS_DAYS_SINCE_ADMISSION", "OBS_TIME"]], probs], axis=1)
+    probs_df.columns = ["ADMISSION_ID", "OBS_DAYS_SINCE_ADMISSION", "OBS_TIME", "PROBABILITY"]
 
     # Write to excel
     save_path.parent.mkdir(parents=True, exist_ok=True)
