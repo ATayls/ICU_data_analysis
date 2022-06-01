@@ -20,8 +20,9 @@ standard_variables = [
     "RESP_RATE",
     "O2_SATS",
     "ACVPU_ENCODED",
-    "INSPIRED_O2_LITRES",
-    "INSPIRED_O2_%",
+    #"INSPIRED_O2_LITRES",
+    #"INSPIRED_O2_%",
+    "INSP_O2_CAT_ENCODED"
 ]
 
 split_points = {
@@ -37,8 +38,9 @@ stable_24hr_slope_min_max = {
     "HEART_RATE": (-10.0, 10.0),
     "RESP_RATE": (-2.0, 2.0),
     "O2_SATS": (-2.0, 2.0),
-    "INSPIRED_O2_LITRES": (-0.5, 0.5),
-    "INSPIRED_O2_%": (-3.0, 3.0)
+    #"INSPIRED_O2_LITRES": (-0.5, 0.5),
+    #"INSPIRED_O2_%": (-3.0, 3.0),
+    "INSP_O2_CAT_ENCODED": (-1, 1)
 }
 
 slope_categories = {

@@ -270,7 +270,7 @@ def categorise_obs_slope(row: pd.Series, var_name: str, thresholds: Tuple[float,
         else:
             # Stable
             return 3
-    elif ("INSPIRED_O2" in var_name) or ("INSP_O2" in var_name) :
+    elif ("INSPIRED_O2" in var_name):
         if row[var_name+"_SLOPE_TIMEWISE"] < stable_min:
             # Improving
             return 2
@@ -280,6 +280,22 @@ def categorise_obs_slope(row: pd.Series, var_name: str, thresholds: Tuple[float,
         else:
             # Stable
             return 3
+    elif var_name == "INSP_O2_CAT_ENCODED":
+        if row[var_name] == 0:
+            if (row[var_name+"_SLOPE_TIMEWISE"] < stable_max) and (row[var_name+"_SLOPE_TIMEWISE"] > stable_min):
+                return 0
+            else:
+                return 1
+        else:
+            if row[var_name + "_SLOPE_TIMEWISE"] < stable_min:
+                # Higher risk Improving
+                return 2
+            elif row[var_name + "_SLOPE_TIMEWISE"] > stable_max:
+                # Higher risk Worsening
+                return 4
+            else:
+                # Stable High risk
+                return 3
     elif row[var_name+"_POS"] > 0:
         if row[var_name+"_SLOPE_TIMEWISE"] < stable_min:
             # High risk improving
