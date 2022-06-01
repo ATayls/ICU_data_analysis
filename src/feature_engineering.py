@@ -187,7 +187,7 @@ def create_ts_slope_features(
         column_sort=time_col,
         min_timeshift=2,
         max_timeshift=periods-1,
-        n_jobs=0
+        n_jobs=8
     )
 
     # Extract slope features
@@ -355,7 +355,7 @@ def get_all_feature_names():
     # timeseries features
     ts_features = [
         f'{var}_{f}' for var in settings.standard_variables
-        for f in ['DIFF', 'ROLAVG', 'ROLSTD', 'ALLAVG', 'ALLSTD']
+        for f in ['DIFF', 'ROLAVG', 'ROLSTD', 'ALLSTD']
     ]
     # slope features
     slope_features = [f"{var}_SLOPE" for var in settings.standard_variables]
