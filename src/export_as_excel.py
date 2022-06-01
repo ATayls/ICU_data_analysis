@@ -32,6 +32,11 @@ def export(
     probs_df = pd.concat([df[["ADMISSION_ID", "OBS_DAYS_SINCE_ADMISSION", "OBS_TIME"]], probs], axis=1)
     probs_df.columns = ["ADMISSION_ID", "OBS_DAYS_SINCE_ADMISSION", "OBS_TIME", "PROBABILITY"]
 
+    f_coefs = pd.concat([
+        pd.DataFrame(trained_lr_model.intercept_, columns=["INTERCEPT"]),
+        pd.DataFrame(trained_lr_model.coef_, columns=feature_list)
+    ],axis=1)
+
     # Write to excel
     save_path.parent.mkdir(parents=True, exist_ok=True)
     with pd.ExcelWriter(save_path) as writer:
@@ -39,6 +44,6 @@ def export(
         df[feature_list].to_excel(writer, sheet_name='Engineered features', index=False)
         scaling_metrics.to_excel(writer, sheet_name='Scaling metrics')
         pd.DataFrame(scaled_features, columns=feature_list).to_excel(writer, sheet_name='Scaled features', index=False)
-        pd.DataFrame(trained_lr_model.coef_, columns=feature_list).to_excel(writer, sheet_name='Feature Coeffiecents', index=False)
+        f_coefs.to_excel(writer, sheet_name='Feature Coeffiecents', index=False)
         probs_df.to_excel(writer, sheet_name='LR probability', index=False)
         pd.DataFrame(pd.Series(metrics)).to_excel(writer, sheet_name='Metrics', index=True)
