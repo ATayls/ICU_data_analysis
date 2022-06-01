@@ -345,4 +345,4 @@ def get_all_feature_names():
     slope_features = [f"{var}_SLOPE" for var in settings.standard_variables]
     slope_timewise_features = [f"{var}_SLOPE_TIMEWISE" for var in settings.standard_variables]
     slope_cat_features = [f"{var}_SLOPE_CAT" for var in settings.stable_24hr_slope_min_max.keys()]
-    return split_features + standard_features + ts_features + slope_timewise_features + slope_cat_features
+    return split_features + standard_features + ts_features + slope_cat_features
