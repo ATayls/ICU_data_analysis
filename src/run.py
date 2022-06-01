@@ -68,6 +68,18 @@ def main(
     df_tr = ETL(filename_train, data_version, ts_n_obs, drop_first_n_observations)
     df_te = ETL(filename_test, data_version, ts_n_obs, drop_first_n_observations)
 
+    df_tr[dependant_var] = df_tr[dependant_var].fillna(0)
+    df_te[dependant_var] = df_te[dependant_var].fillna(0)
+    ####### CARDIAC DATA
+    # df_te = df_te.rename(columns={
+    #     "NEWS2": "NEWS_2",
+    #     "EVENT_WITHIN_24HOURS": "24_HOURS_FROM_EVENT",
+    #     "EVENT_WITHIN_4HOURS": "4_HOURS_FROM_ANNOTATED_EVENT",
+    # })
+    # df_te["24_HOURS_FROM_EVENT"] = df_te["24_HOURS_FROM_EVENT"].fillna(0)
+    # df_te["4_HOURS_FROM_ANNOTATED_EVENT"] = df_te["4_HOURS_FROM_ANNOTATED_EVENT"].fillna(0)
+
+
     ##########################################################
     ## Modelling
     ##########################################################
@@ -137,8 +149,8 @@ def main(
             "ADMISSION_ID",
             "OBS_DAYS_SINCE_ADMISSION",
             "OBS_TIME",
-            "DIED_FLAG",
-            "ICU_FLAG",
+            #"DIED_FLAG",
+            #"ICU_FLAG",
         ]
 
         export(
@@ -200,20 +212,22 @@ if __name__ == '__main__':
     ################################################################################
 
     # Run config
-    DATA_VERSION = "6"
+    DATA_VERSION = "9"
     N_BOOTSTRAPS = 250
     TS_N_OBS = 5
 
-    FILENAME_TRAIN = 'Respiratory admissions April 2015 to December 2019 excel v11_anonymised.xlsx'
-    FILENAME_TEST = 'Respiratory admissions January 2020 to December 2020 v1_anonymised.xlsx'
+    FILENAME_TRAIN = 'Respiratory admissions April 2015 to December 2019 excel v14_anonymised.xlsx'
+    FILENAME_TEST = 'Respiratory admissions January 2020 to December 2020 v2_anonymised.xlsx'
     DEPENDANT_VAR = "24_HOURS_FROM_EVENT"
     main(FILENAME_TRAIN, FILENAME_TEST, DEPENDANT_VAR, TS_N_OBS, DATA_VERSION, N_BOOTSTRAPS,
+         write_to_excel=True,
          drop_first_n_observations=2)
 
-    FILENAME_TRAIN = 'Annotated_dataset_training_anonymised_V2.xlsx'
-    FILENAME_TEST = 'Annotated dataset_validation_anonymised.xlsx'
+    FILENAME_TRAIN = 'Annotated dataset_training_anonymised_V4.xlsx'
+    FILENAME_TEST = 'Annotated dataset_validation_anonymised_V2.xlsx'
     DEPENDANT_VAR = "4_HOURS_FROM_ANNOTATED_EVENT"
     main(FILENAME_TRAIN, FILENAME_TEST, DEPENDANT_VAR, TS_N_OBS, DATA_VERSION, N_BOOTSTRAPS,
+         write_to_excel=True,
          drop_first_n_observations=2)
 
     print("")
