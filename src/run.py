@@ -212,16 +212,16 @@ if __name__ == '__main__':
     ################################################################################
 
     # Run config
-    DATA_VERSION = "9"
+    DATA_VERSION = "10"
     N_BOOTSTRAPS = 250
     TS_N_OBS = 5
 
-    FILENAME_TRAIN = 'Respiratory admissions April 2015 to December 2019 excel v14_anonymised.xlsx'
-    FILENAME_TEST = 'Respiratory admissions January 2020 to December 2020 v2_anonymised.xlsx'
-    DEPENDANT_VAR = "24_HOURS_FROM_EVENT"
-    main(FILENAME_TRAIN, FILENAME_TEST, DEPENDANT_VAR, TS_N_OBS, DATA_VERSION, N_BOOTSTRAPS,
-         write_to_excel=True,
-         drop_first_n_observations=2)
+    # FILENAME_TRAIN = 'Respiratory admissions April 2015 to December 2019 excel v14_anonymised.xlsx'
+    # FILENAME_TEST = 'Respiratory admissions January 2020 to December 2020 v2_anonymised.xlsx'
+    # DEPENDANT_VAR = "24_HOURS_FROM_EVENT"
+    # main(FILENAME_TRAIN, FILENAME_TEST, DEPENDANT_VAR, TS_N_OBS, DATA_VERSION, N_BOOTSTRAPS,
+    #      write_to_excel=True,
+    #      drop_first_n_observations=2)
 
     FILENAME_TRAIN = 'Annotated dataset_training_anonymised_V5.xlsx'
     FILENAME_TEST = 'Annotated dataset_validation_anonymised_V2.xlsx'
