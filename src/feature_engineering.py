@@ -261,15 +261,27 @@ def categorise_obs_slope(row: pd.Series, var_name: str, thresholds: Tuple[float,
     stable_min /= 24
     stable_max /= 24
     if var_name == "O2_SATS":
-        if row[var_name + "_SLOPE_TIMEWISE"] < stable_min:
-            # Worsening
-            return 4
-        elif row[var_name + "_SLOPE_TIMEWISE"] > stable_max:
-            # Improving
-            return 2
+        # Todo o2 sats normal range of 94-100 to settings (for chronic this is 88+ )
+        if row[var_name] < 94:
+            if row[var_name + "_SLOPE_TIMEWISE"] < stable_min:
+                # high risk worsening
+                return 4
+            elif row[var_name + "_SLOPE_TIMEWISE"] > stable_max:
+                #  High risk improving
+                return 2
+            else:
+                # high risk stable
+                return 3
         else:
-            # Stable
-            return 3
+            if row[var_name + "_SLOPE_TIMEWISE"] < stable_min:
+                # Low risk unstable
+                return 1
+            elif row[var_name + "_SLOPE_TIMEWISE"] > stable_max:
+                #  low risk unstable
+                return 1
+            else:
+                # Stable
+                return 0
     elif ("INSPIRED_O2" in var_name):
         if row[var_name+"_SLOPE_TIMEWISE"] < stable_min:
             # Improving
