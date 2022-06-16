@@ -43,8 +43,12 @@ stable_24hr_slope_min_max = {
     "INSP_O2_CAT_ENCODED": (-1, 1)
 }
 
-slope_categories = {
-    "stable"
+slope_category_encoding = {
+    "normal stable": 0,
+    "normal unstable": 1,
+    "abnormal improving": 2,
+    "abnormal stable": 3,
+    "abnormal worsening": 4,
 }
 
 column_name_mapping = {

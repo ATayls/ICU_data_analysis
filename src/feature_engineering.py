@@ -265,79 +265,79 @@ def categorise_obs_slope(row: pd.Series, var_name: str, thresholds: Tuple[float,
         if row[var_name] < 94:
             if row[var_name + "_SLOPE_TIMEWISE"] < stable_min:
                 # high risk worsening
-                return 4
+                return settings.slope_category_encoding["abnormal worsening"]
             elif row[var_name + "_SLOPE_TIMEWISE"] > stable_max:
                 #  High risk improving
-                return 2
+                return settings.slope_category_encoding["abnormal improving"]
             else:
                 # high risk stable
-                return 3
+                return settings.slope_category_encoding["abnormal stable"]
         else:
             if row[var_name + "_SLOPE_TIMEWISE"] < stable_min:
                 # Low risk unstable
-                return 1
+                return settings.slope_category_encoding["normal unstable"]
             elif row[var_name + "_SLOPE_TIMEWISE"] > stable_max:
                 #  low risk unstable
-                return 1
+                return settings.slope_category_encoding["normal unstable"]
             else:
                 # Stable
-                return 0
+                return settings.slope_category_encoding["normal stable"]
     elif ("INSPIRED_O2" in var_name):
         if row[var_name+"_SLOPE_TIMEWISE"] < stable_min:
             # Improving
-            return 2
+            return settings.slope_category_encoding["abnormal improving"]
         elif row[var_name+"_SLOPE_TIMEWISE"] > stable_max:
             # Worsening
-            return 4
+            return settings.slope_category_encoding["abnormal worsening"]
         else:
             # Stable
-            return 3
+            return settings.slope_category_encoding["abnormal stable"]
     elif var_name == "INSP_O2_CAT_ENCODED":
         if row[var_name] == 0:
             if (row[var_name+"_SLOPE_TIMEWISE"] < stable_max) and (row[var_name+"_SLOPE_TIMEWISE"] > stable_min):
-                return 0
+                return settings.slope_category_encoding["normal stable"]
             else:
-                return 1
+                return settings.slope_category_encoding["normal unstable"]
         else:
             if row[var_name + "_SLOPE_TIMEWISE"] < stable_min:
                 # Higher risk Improving
-                return 2
+                return settings.slope_category_encoding["abnormal improving"]
             elif row[var_name + "_SLOPE_TIMEWISE"] > stable_max:
                 # Higher risk Worsening
-                return 4
+                return settings.slope_category_encoding["abnormal worsening"]
             else:
                 # Stable High risk
-                return 3
+                return settings.slope_category_encoding["abnormal stable"]
     elif row[var_name+"_POS"] > 0:
         if row[var_name+"_SLOPE_TIMEWISE"] < stable_min:
             # High risk improving
-            return 2
+            return settings.slope_category_encoding["abnormal improving"]
         elif row[var_name+"_SLOPE_TIMEWISE"] > stable_max:
             # high risk worsening
-            return 4
+            return settings.slope_category_encoding["abnormal worsening"]
         else:
             # high risk stable
-            return 3
+            return settings.slope_category_encoding["abnormal stable"]
     elif row[var_name+"_NEG"] > 0:
         if row[var_name + "_SLOPE_TIMEWISE"] < stable_min:
             # high risk and Worsening
-            return 4
+            return settings.slope_category_encoding["abnormal worsening"]
         elif row[var_name + "_SLOPE_TIMEWISE"] > stable_max:
             # high risk and Improving
-            return 2
+            return settings.slope_category_encoding["abnormal improving"]
         else:
             # high risk stable
-            return 3
+            return settings.slope_category_encoding["abnormal stable"]
     else:
         if row[var_name + "_SLOPE_TIMEWISE"] < stable_min:
             # Low risk unstable
-            return 1
+            return settings.slope_category_encoding["normal unstable"]
         elif row[var_name + "_SLOPE_TIMEWISE"] > stable_max:
             # low risk unstable
-            return 1
+            return settings.slope_category_encoding["normal unstable"]
         else:
             # Stable
-            return 0
+            return settings.slope_category_encoding["normal stable"]
 
 
 def create_features(icu_df: pd.DataFrame, periods: int, verbose: bool = True) -> pd.DataFrame:
