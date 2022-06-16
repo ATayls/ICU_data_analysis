@@ -355,7 +355,7 @@ def get_all_feature_names():
     # timeseries features
     ts_features = [
         f'{var}_{f}' for var in settings.standard_variables
-        for f in ['DIFF', 'ROLAVG', 'ROLSTD', 'ALLSTD']
+        for f in ['DIFF', 'ROLAVG', 'ROLSTD']
     ]
     # slope features
     slope_features = [f"{var}_SLOPE" for var in settings.standard_variables]
