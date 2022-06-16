@@ -46,8 +46,8 @@ stable_24hr_slope_min_max = {
 slope_category_encoding = {
     "normal stable": 0,
     "normal unstable": 1,
-    "abnormal improving": 2,
-    "abnormal stable": 3,
+    "abnormal stable": 2,
+    "abnormal improving": 3,
     "abnormal worsening": 4,
 }
 
