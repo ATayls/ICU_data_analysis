@@ -3,7 +3,7 @@ from typing import Optional
 from utils import load_data, drop_first_n_observations
 from preprocessing import preprocess
 from feature_engineering import create_features, get_all_feature_names
-from settings import PROC_DATA_DIR, SAVED_RESULTS_DIR, PLOTS_DIR
+from settings import PROC_DATA_DIR, SAVED_RESULTS_DIR, PLOTS_DIR, MODEL_DIR
 from news2_functions import bootstrap_news2
 from train import train_logistic_model_bootstrapped, train_logistic_model_CV_grouped, train_logistic_model_cv, run_lr_train
 from plots import compare_cv_results, shap_linear_summary, permutation_importance_plot
@@ -12,6 +12,7 @@ import settings
 
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+from joblib import dump, load
 
 
 ################################################################################
@@ -111,6 +112,23 @@ def main(
           f"AUPRC:{test_results_dict['metrics']['AUC PR']}")
     print(f"FULL MODEL NEWS2 TEST RESULTS: AUROC:{news2_results_te['CV_AVG']['metrics']['AUC ROC']} "
           f"AUPRC:{news2_results_te['CV_AVG']['metrics']['AUC PR']}")
+
+    ##########################################################
+    ## Save model and scaler
+    ##########################################################
+
+
+    scaler_save_path = MODEL_DIR.joinpath(
+        f"V{data_version}",
+        f"SCALER_FITON_{filename_train.split('.')[0]}.pkl"
+    )
+    model_save_path = MODEL_DIR.joinpath(
+        f"V{data_version}",
+        f"FULLMODEL_TRAINON_{filename_train.split('.')[0]}.pkl"
+    )
+    model_save_path.parent.mkdir(parents=True, exist_ok=True)
+    dump(test_results_dict['model'], model_save_path)
+    dump(StandardScaler().fit(df_tr[feature_list]), scaler_save_path)
 
     ##########################################################
     ## Save raw results

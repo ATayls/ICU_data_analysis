@@ -12,6 +12,7 @@ PROC_DATA_DIR = ROOT_DIR.joinpath(r'processed_data')
 # Saved results folder
 SAVED_RESULTS_DIR = ROOT_DIR.joinpath(r'saved_results')
 PLOTS_DIR = ROOT_DIR.joinpath(r"plots")
+MODEL_DIR = ROOT_DIR.joinpath(r"saved_models")
 
 standard_variables = [
     "TEMPERATURE",
