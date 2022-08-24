@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 from pathlib import Path
 
 import pandas as pd
@@ -13,8 +13,8 @@ def export(
     original_fields: List[str],
     feature_list: List[str],
     fitted_scaler: StandardScaler,
-    metrics: Dict[str, int],
     save_path: Path,
+    metrics: Optional[Dict[str, int]] = None,
 ):
     print("---Exporting full model to excel")
     # Scale with fitted scaler
@@ -46,4 +46,5 @@ def export(
         pd.DataFrame(scaled_features, columns=feature_list).to_excel(writer, sheet_name='Scaled features', index=False)
         f_coefs.to_excel(writer, sheet_name='Feature Coeffiecents', index=False)
         probs_df.to_excel(writer, sheet_name='LR probability', index=False)
-        pd.DataFrame(pd.Series(metrics)).to_excel(writer, sheet_name='Metrics', index=True)
+        if metrics is not None:
+            pd.DataFrame(pd.Series(metrics)).to_excel(writer, sheet_name='Metrics', index=True)
