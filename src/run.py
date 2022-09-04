@@ -230,7 +230,7 @@ if __name__ == '__main__':
     ################################################################################
 
     # Run config
-    DATA_VERSION = "9"
+    DATA_VERSION = "11"
     N_BOOTSTRAPS = 250
     TS_N_OBS = 5
 

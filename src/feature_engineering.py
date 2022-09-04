@@ -261,8 +261,12 @@ def categorise_obs_slope(row: pd.Series, var_name: str, thresholds: Tuple[float,
     stable_min /= 24
     stable_max /= 24
     if var_name == "O2_SATS":
-        # Todo o2 sats normal range of 94-100 to settings (for chronic this is 88+ )
-        if row[var_name] < 94:
+        # Todo o2 sats normal range of 96-100 to settings (for chronic this is 88+ )
+        if 'O2_SATS_LOWER_LIMIT' in row.index:
+            normal_limit = row['O2_SATS_LOWER_LIMIT']
+        else:
+            normal_limit = 96
+        if row[var_name] < normal_limit:
             if row[var_name + "_SLOPE_TIMEWISE"] < stable_min:
                 # high risk worsening
                 return settings.slope_category_encoding["abnormal worsening"]
@@ -339,6 +343,12 @@ def categorise_obs_slope(row: pd.Series, var_name: str, thresholds: Tuple[float,
             # Stable
             return settings.slope_category_encoding["normal stable"]
 
+def additional_o2_sats_alteration(icu_df: pd.DataFrame):
+    o2_sats_below_limit = icu_df["O2_SATS"] - icu_df["O2_SATS_LOWER_LIMIT"]
+    o2_sats_below_limit.loc[o2_sats_below_limit<0] = 0
+    icu_df["O2_SATS_NEG"] = o2_sats_below_limit
+    return icu_df
+
 
 def create_features(icu_df: pd.DataFrame, periods: int, verbose: bool = True) -> pd.DataFrame:
     """ Preprocessing pipeline for ICU datasets"""
@@ -352,7 +362,7 @@ def create_features(icu_df: pd.DataFrame, periods: int, verbose: bool = True) ->
                     periods=periods,
                     create_slope_categories=True,
                     stable_thresholds=settings.stable_24hr_slope_min_max
-              )
+              ).pipe(additional_o2_sats_alteration)
     )
 
 
@@ -364,6 +374,11 @@ def get_all_feature_names():
     split_features = pos_split_features + neg_split_features
     # standard features (unsplit)
     standard_features = list(set(settings.standard_variables) - set(settings.split_points.keys()))
+
+    # O2 SATS edit
+    standard_features.remove("O2_SATS")
+    split_features.append("O2_SATS_NEG")
+
     # timeseries features
     ts_features = [
         f'{var}_{f}' for var in settings.standard_variables
