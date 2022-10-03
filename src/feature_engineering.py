@@ -78,15 +78,24 @@ def create_rolling(icu_df: pd.DataFrame, variables: List[str], periods: int) -> 
     """
     Calculate rolling average and standard deviation over N periods on selected variables.
     """
-    icu_df = icu_df.copy()
+    temp_icu_df = icu_df.copy()
     print(f"--Calculating rolling avg and std with period:{periods}")
+
+    # Custom O2_SATS edit
+    o2_sats_below_limit = temp_icu_df["O2_SATS"] - temp_icu_df["O2_SATS_LOWER_LIMIT"]
+    o2_sats_below_limit.loc[o2_sats_below_limit<0] = 0
+    temp_icu_df["O2_SATS_NEG"] = o2_sats_below_limit
+    variables.remove("O2_SATS")
+    variables.append("O2_SATS_NEG")
+
+
     ROLAVG = (
-        icu_df.groupby('ADMISSION_ID')[variables]
+        temp_icu_df.groupby('ADMISSION_ID')[variables]
             .transform(lambda s: s.rolling(periods, min_periods=1).mean())
             .add_suffix("_ROLAVG")
     )
     ROLSTD = (
-        icu_df.groupby('ADMISSION_ID')[variables]
+        temp_icu_df.groupby('ADMISSION_ID')[variables]
             .transform(lambda s: s.rolling(periods, min_periods=1).std())
             .add_suffix("_ROLSTD")
     )
@@ -384,6 +393,13 @@ def get_all_feature_names():
         f'{var}_{f}' for var in settings.standard_variables
         for f in ['DIFF', 'ROLAVG', 'ROLSTD']
     ]
+
+    # O2 Sats edit
+    ts_features.remove("O2_SATS_ROLAVG")
+    ts_features.remove("O2_SATS_ROLSTD")
+    ts_features.append("O2_SATS_NEG_ROLAVG")
+    ts_features.append("O2_SATS_NEG_ROLSTD")
+
     # slope features
     slope_features = [f"{var}_SLOPE" for var in settings.standard_variables]
     slope_timewise_features = [f"{var}_SLOPE_TIMEWISE" for var in settings.standard_variables]

@@ -80,6 +80,14 @@ def main(
     # df_te["24_HOURS_FROM_EVENT"] = df_te["24_HOURS_FROM_EVENT"].fillna(0)
     # df_te["4_HOURS_FROM_ANNOTATED_EVENT"] = df_te["4_HOURS_FROM_ANNOTATED_EVENT"].fillna(0)
 
+    for o2_sats_col in ["O2_SATS_NEG_ROLAVG", "O2_SATS_NEG_ROLSTD"]:
+        df_tr[o2_sats_col] = df_tr.groupby('ADMISSION_ID')["O2_SATS_NEG_ROLAVG"].fillna(
+            method='ffill'
+        ).fillna(df_tr["O2_SATS_NEG"])
+        df_te[o2_sats_col] = df_te.groupby('ADMISSION_ID')["O2_SATS_NEG_ROLAVG"].fillna(
+            method='ffill'
+        ).fillna(df_te["O2_SATS_NEG"])
+
 
     ##########################################################
     ## Modelling
@@ -230,8 +238,8 @@ if __name__ == '__main__':
     ################################################################################
 
     # Run config
-    DATA_VERSION = "11"
-    N_BOOTSTRAPS = 250
+    DATA_VERSION = "12"
+    N_BOOTSTRAPS = 125
     TS_N_OBS = 5
 
     FILENAME_TRAIN = 'Respiratory admissions April 2015 to December 2019 excel v14_anonymised.xlsx'
