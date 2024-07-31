@@ -19,6 +19,7 @@ An API deployment of the models trained here can be found at https://github.com/
 - [Plots](#plots)
 - [Export](#export)
 - [Files and Directories](#files-and-directories)
+- [Citation] (#citation)
 
 ## Installation
 
@@ -146,3 +147,18 @@ The processed data, model predictions, and metrics can be exported to Excel file
 
 - `evaluation.py`: Utilities around model evaluation.
 - `utils.py`: General Utilities.
+
+
+## Citation
+
+If you use this repository, please cite it as follows:
+
+Taylor, A. (2022). ICU Data Analysis [Source code]. GitHub. https://github.com/ATayls/ICU_data_analysis
+
+This repository is part of the work published in Respiratory Research:
+
+Gonem, S., Taylor, A., et al. (2022). Dynamic early warning scores for predicting clinical deterioration in patients with respiratory disease. Respiratory Research, 23(1), Article 130. https://doi.org/10.1186/s12931-022-02130-6
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
