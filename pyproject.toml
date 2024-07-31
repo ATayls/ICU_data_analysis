@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "icu-data-analysis"
+version = "0.12"
+description = "ICU Data Processing and Modelling"
+authors = ["y"]
+license = "\"MIT\""
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+numpy = "1.21"
+openpyxl = "3.0.9"
+pandas = "1.3.4"
+tqdm = "4.62.3"
+tsfresh = "0.18.0"
+shap = "0.40.0"
+scikit-learn = "^0.22"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

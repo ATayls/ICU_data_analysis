@@ -24,13 +24,45 @@ An API deployment of the models trained here can be found at https://github.com/
 
 To run this project, you need to have Python installed along with the following libraries:
 
-- pandas
-- numpy
-- sklearn
-- tsfresh
-- shap
-- tqdm
-- openpyxl
+### Using `pip` with `requirements.txt`
+
+To install dependencies using `pip` with a `requirements.txt` file, follow these steps:
+
+1. **Ensure you have Python and pip installed**: You can check by running:
+   ```bash
+   python --version
+   pip --version
+   ```
+
+2. **Install dependencies**: Navigate to your project directory where the `requirements.txt` file is located and run:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+This command will install all the dependencies listed in the `requirements.txt` file.
+
+### Using `Poetry` with `pyproject.toml`
+
+To install dependencies using `Poetry` with a `pyproject.toml` file, follow these steps:
+
+1. **Install Poetry**: If you haven't already installed Poetry, you can do so by running:
+   ```bash
+   curl -sSL https://install.python-poetry.org | python3 -
+   ```
+
+2. **Navigate to your project directory**: Ensure you are in the directory where your `pyproject.toml` file is located.
+
+3. **Install dependencies**: Run the following command to install all dependencies specified in the `pyproject.toml` file:
+   ```bash
+   poetry install
+   ```
+
+4. **Activate the virtual environment** (optional): To work within the virtual environment managed by Poetry, you can run:
+   ```bash
+   poetry shell
+   ```
+
+This will create and activate a virtual environment with all the dependencies installed.
 
 
 ## Data Pipeline
